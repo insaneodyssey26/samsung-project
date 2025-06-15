@@ -1,50 +1,67 @@
-# Welcome to your Expo app 👋
+# Standalone Wearable Health Monitoring System – Companion App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+##  Project Overview
 
-## Get started
+This is a **cross-platform mobile app built with React Native**, designed to act as a companion to a **standalone wearable health monitoring device**. The device independently tracks vital health metrics and triggers emergency alerts, while the app provides an optional interface for caregivers and medical responders.
 
-1. Install dependencies
+This project is developed for innovation platforms like **Samsung Solve for Tomorrow India 2025**, with a strong focus on **rural healthcare**, **elderly support**, and **emergency response in low-tech environments**.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+##  Key Features
 
-   ```bash
-   npx expo start
-   ```
+-  Real-time health data display (Heart Rate, Temperature, SpO₂, Fall Detection)
+-  Emergency alert notifications (auto-triggered by the device)
+-  GPS-based location tracking of the user
+-  Health history and vitals log
+-  Manage emergency contacts for fast communication
+-  Push notifications to alert caregivers or family
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+##  Purpose
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+To create a seamless connection between:
+- A **non-tech-savvy user** wearing the health device, and
+- Their **family, caregivers, or emergency services**
 
-## Get a fresh project
+The app ensures real-time monitoring, rapid alerts, and fast decision-making in case of health anomalies — even in rural or remote areas.
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+##  Target Users
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Elderly people, especially those living alone
+- Patients in rural areas without quick access to healthcare
+- Family members who want real-time updates
+- Emergency responders receiving auto-triggered SOS alerts
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+##  Tech Stack
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **React Native** – Cross-platform app development
+- **Firebase** – Realtime database, authentication, notifications
+- **Bluetooth/GSM/GPS** – For device communication and emergency location
+- **Optional:** Expo – For easier development and testing
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+##  Development Scope
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+You can begin building parts of the app *before* hardware is ready:
+- UI Components (Vitals Dashboard, Emergency Screens, Alert Logs)
+- Firebase Authentication & Realtime DB structure
+- Push Notification system
+- Navigation flow (React Navigation)
+- Mock data display for testing
+
+---
+
+##  Folder Structure (As planned)
+
+```plaintext
+/components        // Reusable UI parts (charts, alert cards, buttons)
+/screens           // Main screens: Dashboard, Alerts, Profile, Settings
+/services          // Firebase integration, device communication modules
+/assets            // Icons, fonts, placeholder images
