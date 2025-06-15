@@ -89,7 +89,13 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Health Dashboard</Text>
-        <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
+        <View style={styles.headerInfo}>
+          <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
+          <View style={styles.deviceStatusHeader}>
+            <View style={[styles.statusDot, { backgroundColor: deviceStatusInfo.color }]} />
+            <Text style={styles.deviceStatusText}>{healthData.deviceStatus}</Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.metricsContainer}>
@@ -103,8 +109,8 @@ export default function DashboardScreen() {
           <MiniGraph 
             data={trendData.heartRate} 
             color={heartRateStatus.color}
-            width={70}
-            height={25}
+            width={120}
+            height={30}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
@@ -123,8 +129,8 @@ export default function DashboardScreen() {
           <MiniGraph 
             data={trendData.spO2} 
             color={spO2Status.color}
-            width={70}
-            height={25}
+            width={120}
+            height={30}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
@@ -143,27 +149,14 @@ export default function DashboardScreen() {
           <MiniGraph 
             data={trendData.temperature} 
             color={temperatureStatus.color}
-            width={70}
-            height={25}
+            width={120}
+            height={30}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
             <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
           </View>
           <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
-        </View>
-
-        {/* Device Status Card */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Device Status</Text>
-          <View style={styles.valueContainer}>
-            <Text style={[styles.metricValue, { fontSize: 20 }]}>{healthData.deviceStatus}</Text>
-          </View>
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: deviceStatusInfo.color }]} />
-            <Text style={styles.statusTextNew}>{deviceStatusInfo.status}</Text>
-          </View>
-          <Text style={styles.rangeText}>BLE Connection</Text>
         </View>
       </View>
     </ScrollView>
@@ -191,17 +184,29 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
+  headerInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  deviceStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  deviceStatusText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
   metricsContainer: {
     padding: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   metricCard: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
-    width: '48%',
+    width: '100%',
     marginBottom: 16,
     alignItems: 'center',
     shadowColor: '#000',
