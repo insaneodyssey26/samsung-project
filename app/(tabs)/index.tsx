@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState, useEffect, useRef } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Enhanced Line Chart with Gradients
@@ -327,9 +327,37 @@ export default function DashboardScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.emergencyButton} onPress={handleEmergencyCall}>
-              🚨 Emergency Call
-            </Text>
+            <View style={styles.emergencyContent}>
+              <View style={styles.emergencyIconContainer}>
+                <Ionicons name="call" size={24} color="#ffffff" />
+              </View>
+              <View style={styles.emergencyTextContainer}>
+                <Text style={styles.emergencyTitle}>Emergency Call</Text>
+                <Text style={styles.emergencySubtitle}>Tap to contact emergency services</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={handleEmergencyCall} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#ffffff', '#f8f9fa']}
+                style={styles.emergencyButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+              >
+                <LinearGradient
+                  colors={['#dc2626', '#ef4444', '#f87171']}
+                  style={styles.emergencyButtonInner}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.emergencyButtonContent}>
+                    <Ionicons name="call" size={20} color="#ffffff" style={styles.emergencyCallIcon} />
+                    <Text style={styles.emergencyButtonText}>
+                      CALL NOW
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </LinearGradient>
+            </TouchableOpacity>
             <Text style={styles.emergencyNote}>
               {healthData.emergencyContactsCount} contacts available
             </Text>
@@ -873,29 +901,89 @@ const styles = StyleSheet.create({
   },
   emergencyContainer: {
     marginTop: 16,
-    padding: 16,
-    borderRadius: 16,
+    padding: 20,
+    borderRadius: 20,
     shadowColor: '#ff6b6b',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  emergencyButton: {
-    fontSize: 18,
+  emergencyContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emergencyIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  emergencyTextContainer: {
+    flex: 1,
+  },
+  emergencyTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  emergencySubtitle: {
+    fontSize: 14,
+    color: '#ffffff',
+    opacity: 0.9,
+    fontWeight: '500',
+  },
+  emergencyButton: {
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+    borderRadius: 18,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  emergencyButtonInner: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    shadowColor: '#dc2626',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  emergencyButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyCallIcon: {
+    marginRight: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  emergencyButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#ffffff',
     textAlign: 'center',
-    padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: '#ffffff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    letterSpacing: 1.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   emergencyNote: {
     fontSize: 12,
