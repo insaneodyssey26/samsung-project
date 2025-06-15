@@ -1,11 +1,14 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function AlertsScreen() {
+  const { colors } = useTheme();
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Health Alerts</Text>
-        <Text style={styles.subtitle}>Emergency notifications and warnings</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Health Alerts</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Emergency notifications and warnings</Text>
       </View>
 
       <View style={styles.content}>

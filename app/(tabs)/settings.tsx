@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function SettingsScreen() {
+  const { colors } = useTheme();
   const [emergencyAlerts, setEmergencyAlerts] = useState(true);
   const [locationTracking, setLocationTracking] = useState(true);
   const [hapticFeedback, setHapticFeedback] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Configure your health monitoring preferences</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Configure your health monitoring preferences</Text>
       </View>
 
       <View style={styles.content}>
@@ -61,22 +61,7 @@ export default function SettingsScreen() {
               value={hapticFeedback}
               onValueChange={setHapticFeedback}
               trackColor={{ false: '#ccc', true: '#4CAF50' }}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Dark Mode</Text>
-              <Text style={styles.settingDescription}>
-                Switch to dark theme for low light
-              </Text>
-            </View>
-            <Switch
-              value={darkMode}
-              onValueChange={setDarkMode}
-              trackColor={{ false: '#ccc', true: '#4CAF50' }}
-            />
-          </View>
+            />          </View>
         </View>
 
         <View style={styles.section}>

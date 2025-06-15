@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState, useEffect, useRef } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated, TouchableOpacity } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated, TouchableOpacity, ColorValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Enhanced Line Chart with Gradients
 interface ClassicLineChartProps {
@@ -10,13 +11,15 @@ interface ClassicLineChartProps {
   color: string;
   width?: number;
   height?: number;
+  borderColor?: ColorValue;
 }
 
 const ClassicLineChart = ({ 
   data, 
   color, 
   width = 220, 
-  height = 50 
+  height = 50,
+  borderColor = '#e8e8e8'
 }: ClassicLineChartProps) => {
   if (!data || data.length < 2) return null;
   
@@ -43,9 +46,9 @@ const ClassicLineChart = ({
       
       {/* Grid lines for professional look */}
       <View style={styles.gridContainer}>
-        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '25%' }]} />
-        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '50%' }]} />
-        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '75%' }]} />
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '25%', backgroundColor: borderColor }]} />
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '50%', backgroundColor: borderColor }]} />
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '75%', backgroundColor: borderColor }]} />
       </View>
       
       {/* Data line segments with enhanced styling */}
@@ -90,6 +93,7 @@ const ClassicLineChart = ({
               left: point.x - 3,
               top: point.y - 3,
               backgroundColor: color,
+              borderColor: borderColor,
               shadowColor: color,
               shadowOffset: { width: 0, height: 0 },
               shadowOpacity: 0.6,
@@ -104,6 +108,7 @@ const ClassicLineChart = ({
 };
 
 export default function DashboardScreen() {
+  const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -266,7 +271,7 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#f8fafc', '#e2e8f0']}
+        colors={[colors.background, colors.surface]}
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -278,15 +283,15 @@ export default function DashboardScreen() {
         }
       >
         <LinearGradient
-          colors={['#334155', '#475569']}
+          colors={colors.headerBackground}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.headerTop}>
-            <Text style={styles.title}>Health Dashboard</Text>
+            <Text style={[styles.title, { color: colors.headerText }]}>Health Dashboard</Text>
             <View style={styles.batteryContainer}>
-              <Text style={styles.batteryText}>{healthData.batteryLevel}%</Text>
+              <Text style={[styles.batteryText, { color: colors.headerSecondary }]}>{healthData.batteryLevel}%</Text>
               <LinearGradient
                 colors={healthData.batteryLevel > 20 ? ['#00ff87', '#60efff'] : ['#ff6b6b', '#ffa726']}
                 style={styles.batteryIcon}
@@ -296,7 +301,7 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={styles.headerInfo}>
-            <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
+            <Text style={[styles.lastUpdate, { color: colors.headerSecondary }]}>Last update: {healthData.lastUpdate}</Text>
             <LinearGradient
               colors={activeAlerts > 0 ? ['#ff9800', '#ff5722'] : ['#4caf50', '#8bc34a']}
               style={styles.alertSummary}
@@ -318,11 +323,11 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               />
-              <Text style={styles.deviceStatusText}>{healthData.deviceStatus}</Text>
+              <Text style={[styles.deviceStatusText, { color: colors.headerSecondary }]}>{healthData.deviceStatus}</Text>
             </View>
           </View>
           <LinearGradient
-            colors={['#ff6b6b', '#ff8e53']}
+            colors={colors.emergencyBackground}
             style={styles.emergencyContainer}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -369,6 +374,7 @@ export default function DashboardScreen() {
           <Animated.View 
             style={[
               styles.metricCard, 
+              { backgroundColor: colors.cardBackground, borderColor: colors.border },
               heartRateStatus.alert && styles.alertCard,
               {
                 transform: [{ 
@@ -381,7 +387,7 @@ export default function DashboardScreen() {
             ]}
           >
             <LinearGradient
-              colors={['#ff9a9e', '#fecfef']}
+              colors={['#fef2f2', '#fee2e2']}
               style={styles.cardGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -389,7 +395,7 @@ export default function DashboardScreen() {
             <View style={styles.metricHeader}>
               <View style={styles.labelWithIcon}>
                 <LinearGradient
-                  colors={['#FF6B6B', '#FF8A80']}
+                  colors={colors.heartRateIcon}
                   style={styles.iconBackground}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -398,7 +404,7 @@ export default function DashboardScreen() {
                     <Ionicons name="heart" size={22} color="#ffffff" style={styles.metricIcon} />
                   </Animated.View>
                 </LinearGradient>
-                <Text style={styles.metricLabel}>Heart Rate</Text>
+                <Text style={[styles.metricLabel, { color: colors.text }]}>Heart Rate</Text>
               </View>
               <LinearGradient
                 colors={[getTrendColor(heartRateInsights.trend), getTrendColor(heartRateInsights.trend) + '80']}
@@ -411,12 +417,13 @@ export default function DashboardScreen() {
               {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
             </View>
             <View style={styles.valueContainer}>
-              <Text style={styles.metricValue}>{healthData.heartRate}</Text>
-              <Text style={styles.metricUnit}>BPM</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{healthData.heartRate}</Text>
+              <Text style={[styles.metricUnit, { color: colors.textMuted }]}>BPM</Text>
             </View>
             <ClassicLineChart 
               data={trendData.heartRate}
               color={heartRateStatus.color}
+              borderColor={colors.border}
               width={220}
               height={45}
             />
@@ -431,9 +438,9 @@ export default function DashboardScreen() {
               <Text style={styles.trendTextInline}>• {getTrendLabel(heartRateInsights.trend)}</Text>
             </View>
             <View style={styles.insightsContainer}>
-              <Text style={styles.insightText}>24h Avg: {heartRateInsights.average24h} BPM</Text>
-              <Text style={styles.rangeText}>Normal: 60-100 BPM</Text>
-              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+              <Text style={[styles.insightText, { color: colors.textMuted }]}>24h Avg: {heartRateInsights.average24h} BPM</Text>
+              <Text style={[styles.rangeText, { color: colors.textMuted }]}>Normal: 60-100 BPM</Text>
+              <Text style={[styles.timestampText, { color: colors.textMuted }]}>Updated: {healthData.timestamp}</Text>
             </View>
           </Animated.View>
 
@@ -441,6 +448,7 @@ export default function DashboardScreen() {
           <Animated.View 
             style={[
               styles.metricCard,
+              { backgroundColor: colors.cardBackground, borderColor: colors.border },
               spO2Status.alert && styles.alertCard,
               {
                 transform: [{ 
@@ -453,7 +461,7 @@ export default function DashboardScreen() {
             ]}
           >
             <LinearGradient
-              colors={['#a8edea', '#fed6e3']}
+              colors={['#eff6ff', '#dbeafe']}
               style={styles.cardGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -461,14 +469,14 @@ export default function DashboardScreen() {
             <View style={styles.metricHeader}>
               <View style={styles.labelWithIcon}>
                 <LinearGradient
-                  colors={['#4ECDC4', '#44A08D']}
+                  colors={colors.spO2Icon}
                   style={styles.iconBackground}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
                   <Ionicons name="water" size={22} color="#ffffff" style={styles.metricIcon} />
                 </LinearGradient>
-                <Text style={styles.metricLabel}>SpO₂</Text>
+                <Text style={[styles.metricLabel, { color: colors.text }]}>SpO₂</Text>
               </View>
               <LinearGradient
                 colors={[getTrendColor(spO2Insights.trend), getTrendColor(spO2Insights.trend) + '80']}
@@ -481,12 +489,13 @@ export default function DashboardScreen() {
               {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
             </View>
             <View style={styles.valueContainer}>
-              <Text style={styles.metricValue}>{healthData.spO2}</Text>
-              <Text style={styles.metricUnit}>%</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{healthData.spO2}</Text>
+              <Text style={[styles.metricUnit, { color: colors.textMuted }]}>%</Text>
             </View>
             <ClassicLineChart 
               data={trendData.spO2}
               color={spO2Status.color}
+              borderColor={colors.border}
               width={220}
               height={45}
             />
@@ -497,13 +506,13 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               />
-              <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
-              <Text style={styles.trendTextInline}>• {getTrendLabel(spO2Insights.trend)}</Text>
+              <Text style={[styles.statusTextNew, { color: colors.text }]}>{spO2Status.status}</Text>
+              <Text style={[styles.trendTextInline, { color: colors.textMuted }]}>• {getTrendLabel(spO2Insights.trend)}</Text>
             </View>
             <View style={styles.insightsContainer}>
-              <Text style={styles.insightText}>24h Avg: {spO2Insights.average24h}%</Text>
-              <Text style={styles.rangeText}>Normal: 95-100%</Text>
-              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+              <Text style={[styles.insightText, { color: colors.textMuted }]}>24h Avg: {spO2Insights.average24h}%</Text>
+              <Text style={[styles.rangeText, { color: colors.textMuted }]}>Normal: 95-100%</Text>
+              <Text style={[styles.timestampText, { color: colors.textMuted }]}>Updated: {healthData.timestamp}</Text>
             </View>
           </Animated.View>
 
@@ -511,6 +520,7 @@ export default function DashboardScreen() {
           <Animated.View 
             style={[
               styles.metricCard,
+              { backgroundColor: colors.cardBackground, borderColor: colors.border },
               temperatureStatus.alert && styles.alertCard,
               {
                 transform: [{ 
@@ -523,7 +533,7 @@ export default function DashboardScreen() {
             ]}
           >
             <LinearGradient
-              colors={['#ffecd2', '#fcb69f']}
+              colors={['#fffbeb', '#fef3c7']}
               style={styles.cardGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -531,14 +541,14 @@ export default function DashboardScreen() {
             <View style={styles.metricHeader}>
               <View style={styles.labelWithIcon}>
                 <LinearGradient
-                  colors={['#FFB347', '#FF8C00']}
+                  colors={colors.temperatureIcon}
                   style={styles.iconBackground}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
                   <Ionicons name="thermometer" size={22} color="#ffffff" style={styles.metricIcon} />
                 </LinearGradient>
-                <Text style={styles.metricLabel}>Temperature</Text>
+                <Text style={[styles.metricLabel, { color: colors.text }]}>Temperature</Text>
               </View>
               <LinearGradient
                 colors={[getTrendColor(temperatureInsights.trend), getTrendColor(temperatureInsights.trend) + '80']}
@@ -551,12 +561,13 @@ export default function DashboardScreen() {
               {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
             </View>
             <View style={styles.valueContainer}>
-              <Text style={styles.metricValue}>{healthData.temperature}</Text>
-              <Text style={styles.metricUnit}>°C</Text>
+              <Text style={[styles.metricValue, { color: colors.text }]}>{healthData.temperature}</Text>
+              <Text style={[styles.metricUnit, { color: colors.textMuted }]}>°C</Text>
             </View>
             <ClassicLineChart 
               data={trendData.temperature}
               color={temperatureStatus.color}
+              borderColor={colors.border}
               width={220}
               height={45}
             />
@@ -567,13 +578,13 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               />
-              <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
-              <Text style={styles.trendTextInline}>• {getTrendLabel(temperatureInsights.trend)}</Text>
+              <Text style={[styles.statusTextNew, { color: colors.text }]}>{temperatureStatus.status}</Text>
+              <Text style={[styles.trendTextInline, { color: colors.textMuted }]}>• {getTrendLabel(temperatureInsights.trend)}</Text>
             </View>
             <View style={styles.insightsContainer}>
-              <Text style={styles.insightText}>24h Avg: {temperatureInsights.average24h}°C</Text>
-              <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
-              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+              <Text style={[styles.insightText, { color: colors.textMuted }]}>24h Avg: {temperatureInsights.average24h}°C</Text>
+              <Text style={[styles.rangeText, { color: colors.textMuted }]}>Normal: 36.1-37.2°C</Text>
+              <Text style={[styles.timestampText, { color: colors.textMuted }]}>Updated: {healthData.timestamp}</Text>
             </View>
           </Animated.View>
         </View>
@@ -643,19 +654,19 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     position: 'relative',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
     padding: 24,
     borderRadius: 24,
     width: '100%',
     marginBottom: 20,
     alignItems: 'center',
-    shadowColor: '#6366f1',
+    shadowColor: '#64748b',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 12,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
     overflow: 'hidden',
   },
   cardGradient: {
@@ -819,7 +830,7 @@ const styles = StyleSheet.create({
   },
   gridLine: {
     position: 'absolute',
-    backgroundColor: '#e8e8e8',
+    opacity: 0.3,
   },
   gridLineHorizontal: {
     left: 0,
@@ -867,11 +878,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   insightText: {
     fontSize: 13,
-    color: '#444',
     textAlign: 'center',
     marginBottom: 4,
     fontWeight: '500',
@@ -1004,7 +1014,6 @@ const styles = StyleSheet.create({
   },
   timestampText: {
     fontSize: 12,
-    color: '#666',
     textAlign: 'center',
     marginTop: 6,
     fontStyle: 'italic',
@@ -1079,14 +1088,17 @@ const styles = StyleSheet.create({
   },
   heartRateCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#E91E63',
+    borderLeftColor: '#dc2626',
+    backgroundColor: '#fefefe',
   },
   spO2Card: {
     borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
+    borderLeftColor: '#2563eb',
+    backgroundColor: '#fefefe',
   },
   temperatureCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9800',
+    borderLeftColor: '#d97706',
+    backgroundColor: '#fefefe',
   },
 });
