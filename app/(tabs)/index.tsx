@@ -1,4 +1,6 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
+import { useState } from 'react';
+import * as Haptics from 'expo-haptics';
 
 // Classic Medical-Style Line Chart
 interface ClassicLineChartProps {
@@ -66,13 +68,18 @@ const ClassicLineChart = ({
 };
 
 export default function DashboardScreen() {
+  const [refreshing, setRefreshing] = useState(false);
+
   // Mock health data for development
   const healthData = {
     heartRate: 72,
     spO2: 98,
     temperature: 36.5,
     deviceStatus: 'Connected',
-    lastUpdate: '2 mins ago'
+    lastUpdate: '2 mins ago',
+    batteryLevel: 85,
+    emergencyContactsCount: 2,
+    timestamp: new Date().toLocaleTimeString()
   };
 
   // Mock trend data (last 10 readings)
@@ -82,23 +89,85 @@ export default function DashboardScreen() {
     temperature: [36.3, 36.4, 36.5, 36.4, 36.6, 36.5, 36.4, 36.5, 36.6, 36.5],
   };
 
+  // Enhanced data insights
+  const getDataInsights = (currentValue: number, trendArray: number[]) => {
+    if (trendArray.length < 2) return { trend: 'stable', change: 0, average24h: currentValue };
+    
+    const lastValue = trendArray[trendArray.length - 2];
+    const change = currentValue - lastValue;
+    const average24h = Math.round((trendArray.reduce((sum, val) => sum + val, 0) / trendArray.length) * 10) / 10;
+    
+    let trend = 'stable';
+    if (change > 1) trend = 'rising';
+    else if (change < -1) trend = 'falling';
+    
+    return { trend, change, average24h };
+  };
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'rising': return '▲';
+      case 'falling': return '▼';
+      default: return '●'; // stable indicator
+    }
+  };
+
+  const getTrendColor = (trend: string) => {
+    switch (trend) {
+      case 'rising': return '#FF9800';
+      case 'falling': return '#2196F3';
+      default: return '#4CAF50'; // stable is green
+    }
+  };
+
+  const getTrendLabel = (trend: string) => {
+    switch (trend) {
+      case 'rising': return 'Rising';
+      case 'falling': return 'Falling';
+      default: return 'Stable';
+    }
+  };
+
+  // Emergency button handler
+  const handleEmergencyCall = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    // In a real app, this would trigger emergency calling
+    alert('Emergency services would be contacted in a real app');
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Add haptic feedback for refresh action
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Simulate data refresh
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  };
+
+  // Calculate insights
+  const heartRateInsights = getDataInsights(healthData.heartRate, trendData.heartRate);
+  const spO2Insights = getDataInsights(healthData.spO2, trendData.spO2);
+  const temperatureInsights = getDataInsights(healthData.temperature, trendData.temperature);
+
   // Function to get health status and color
   const getHeartRateStatus = (hr: number) => {
-    if (hr < 60) return { status: 'Low', color: '#FF9800' };
-    if (hr > 100) return { status: 'High', color: '#F44336' };
-    return { status: 'Normal', color: '#4CAF50' };
+    if (hr < 60) return { status: 'Low', color: '#FF9800', alert: true };
+    if (hr > 100) return { status: 'High', color: '#F44336', alert: true };
+    return { status: 'Normal', color: '#4CAF50', alert: false };
   };
 
   const getSpO2Status = (spo2: number) => {
-    if (spo2 < 95) return { status: 'Low', color: '#F44336' };
-    if (spo2 >= 95 && spo2 <= 100) return { status: 'Normal', color: '#4CAF50' };
-    return { status: 'High', color: '#FF9800' };
+    if (spo2 < 95) return { status: 'Low', color: '#F44336', alert: true };
+    if (spo2 >= 95 && spo2 <= 100) return { status: 'Normal', color: '#4CAF50', alert: false };
+    return { status: 'High', color: '#FF9800', alert: false };
   };
 
   const getTemperatureStatus = (temp: number) => {
-    if (temp < 36.1) return { status: 'Low', color: '#2196F3' };
-    if (temp > 37.2) return { status: 'High', color: '#F44336' };
-    return { status: 'Normal', color: '#4CAF50' };
+    if (temp < 36.1) return { status: 'Low', color: '#2196F3', alert: false };
+    if (temp > 37.2) return { status: 'High', color: '#F44336', alert: true };
+    return { status: 'Normal', color: '#4CAF50', alert: false };
   };
 
   const getDeviceStatus = (status: string) => {
@@ -112,23 +181,72 @@ export default function DashboardScreen() {
   const temperatureStatus = getTemperatureStatus(healthData.temperature);
   const deviceStatusInfo = getDeviceStatus(healthData.deviceStatus);
 
+  // Count active alerts
+  const activeAlerts = [heartRateStatus, spO2Status, temperatureStatus]
+    .filter(status => status.alert).length;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>Health Dashboard</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.title}>Health Dashboard</Text>
+          <View style={styles.batteryContainer}>
+            <Text style={styles.batteryText}>{healthData.batteryLevel}%</Text>
+            <View style={[
+              styles.batteryIcon, 
+              { backgroundColor: healthData.batteryLevel > 20 ? '#4CAF50' : '#F44336' }
+            ]} />
+          </View>
+        </View>
         <View style={styles.headerInfo}>
           <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
+          <View style={styles.alertSummary}>
+            {activeAlerts > 0 ? (
+              <Text style={styles.alertSummaryText}>
+                ⚠️ {activeAlerts} Alert{activeAlerts > 1 ? 's' : ''}
+              </Text>
+            ) : (
+              <Text style={styles.noAlertText}>✅ All Normal</Text>
+            )}
+          </View>
           <View style={styles.deviceStatusHeader}>
             <View style={[styles.statusDot, { backgroundColor: deviceStatusInfo.color }]} />
             <Text style={styles.deviceStatusText}>{healthData.deviceStatus}</Text>
           </View>
         </View>
+        <View style={styles.emergencyContainer}>
+          <Text style={styles.emergencyButton} onPress={handleEmergencyCall}>
+            🚨 Emergency Call
+          </Text>
+          <Text style={styles.emergencyNote}>
+            {healthData.emergencyContactsCount} contacts available
+          </Text>
+        </View>
       </View>
 
       <View style={styles.metricsContainer}>
         {/* Heart Rate Card */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Heart Rate</Text>
+        <View style={[
+          styles.metricCard, 
+          heartRateStatus.alert && styles.alertCard
+        ]}>
+          <View style={styles.metricHeader}>
+            <Text style={styles.metricLabel}>Heart Rate</Text>
+            <View style={styles.trendIndicator}>
+              {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(heartRateInsights.trend) }]}>
+                <Text style={styles.trendIcon}>{getTrendIcon(heartRateInsights.trend)}</Text>
+                <Text style={styles.trendText}>
+                  {getTrendLabel(heartRateInsights.trend)}
+                </Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.heartRate}</Text>
             <Text style={styles.metricUnit}>BPM</Text>
@@ -143,12 +261,30 @@ export default function DashboardScreen() {
             <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
             <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
           </View>
-          <Text style={styles.rangeText}>Normal: 60-100 BPM</Text>
+          <View style={styles.insightsContainer}>
+            <Text style={styles.insightText}>24h Avg: {heartRateInsights.average24h} BPM</Text>
+            <Text style={styles.rangeText}>Normal: 60-100 BPM</Text>
+            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+          </View>
         </View>
 
         {/* SpO2 Card */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>SpO₂</Text>
+        <View style={[
+          styles.metricCard,
+          spO2Status.alert && styles.alertCard
+        ]}>
+          <View style={styles.metricHeader}>
+            <Text style={styles.metricLabel}>SpO₂</Text>
+            <View style={styles.trendIndicator}>
+              {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(spO2Insights.trend) }]}>
+                <Text style={styles.trendIcon}>{getTrendIcon(spO2Insights.trend)}</Text>
+                <Text style={styles.trendText}>
+                  {getTrendLabel(spO2Insights.trend)}
+                </Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.spO2}</Text>
             <Text style={styles.metricUnit}>%</Text>
@@ -163,12 +299,30 @@ export default function DashboardScreen() {
             <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
             <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
           </View>
-          <Text style={styles.rangeText}>Normal: 95-100%</Text>
+          <View style={styles.insightsContainer}>
+            <Text style={styles.insightText}>24h Avg: {spO2Insights.average24h}%</Text>
+            <Text style={styles.rangeText}>Normal: 95-100%</Text>
+            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+          </View>
         </View>
 
         {/* Temperature Card */}
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Temperature</Text>
+        <View style={[
+          styles.metricCard,
+          temperatureStatus.alert && styles.alertCard
+        ]}>
+          <View style={styles.metricHeader}>
+            <Text style={styles.metricLabel}>Temperature</Text>
+            <View style={styles.trendIndicator}>
+              {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(temperatureInsights.trend) }]}>
+                <Text style={styles.trendIcon}>{getTrendIcon(temperatureInsights.trend)}</Text>
+                <Text style={styles.trendText}>
+                  {getTrendLabel(temperatureInsights.trend)}
+                </Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.temperature}</Text>
             <Text style={styles.metricUnit}>°C</Text>
@@ -183,7 +337,11 @@ export default function DashboardScreen() {
             <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
             <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
           </View>
-          <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
+          <View style={styles.insightsContainer}>
+            <Text style={styles.insightText}>24h Avg: {temperatureInsights.average24h}°C</Text>
+            <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
+            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -207,24 +365,26 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   lastUpdate: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#555',
     marginTop: 4,
+    fontWeight: '500',
   },
   headerInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 4,
+    flexWrap: 'wrap',
   },
   deviceStatusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   deviceStatusText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '600',
   },
   metricsContainer: {
     padding: 16,
@@ -243,9 +403,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   metricLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: '#333',
     marginBottom: 8,
+    fontWeight: '600',
   },
   metricValue: {
     fontSize: 32,
@@ -274,15 +435,16 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   statusTextNew: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: '#333',
   },
   rangeText: {
-    fontSize: 11,
-    color: '#999',
+    fontSize: 13,
+    color: '#555',
     marginTop: 4,
     textAlign: 'center',
+    fontWeight: '500',
   },
   progressLabel: {
     fontSize: 12,
@@ -373,5 +535,131 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 2,
     transformOrigin: '0 50%',
+  },
+  metricHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  trendIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  trendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minHeight: 24,
+  },
+  trendIcon: {
+    fontSize: 10,
+    marginRight: 4,
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
+  trendText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#ffffff',
+    textTransform: 'capitalize',
+  },
+  insightsContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  insightText: {
+    fontSize: 13,
+    color: '#444',
+    textAlign: 'center',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  batteryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  batteryText: {
+    fontSize: 13,
+    color: '#555',
+    marginRight: 4,
+    fontWeight: '500',
+  },
+  batteryIcon: {
+    width: 20,
+    height: 10,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  emergencyContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffcdd2',
+  },
+  emergencyButton: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+    textAlign: 'center',
+    padding: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f44336',
+  },
+  emergencyNote: {
+    fontSize: 12,
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  alertCard: {
+    borderWidth: 2,
+    borderColor: '#FF9800',
+    backgroundColor: '#fff8e1',
+  },
+  alertIcon: {
+    fontSize: 12,
+    marginRight: 4,
+    lineHeight: 16,
+  },
+  timestampText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 6,
+    fontStyle: 'italic',
+    fontWeight: '500',
+  },
+  alertSummary: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+  },
+  alertSummaryText: {
+    fontSize: 13,
+    color: '#FF9800',
+    fontWeight: '700',
+  },
+  noAlertText: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontWeight: '700',
   },
 });
