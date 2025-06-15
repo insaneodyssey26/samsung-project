@@ -1,8 +1,10 @@
-import { ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
-import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useState, useEffect, useRef } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-// Classic Medical-Style Line Chart
+// Enhanced Line Chart with Gradients
 interface ClassicLineChartProps {
   data: number[];
   color: string;
@@ -31,6 +33,14 @@ const ClassicLineChart = ({
 
   return (
     <View style={[styles.classicChart, { width, height }]}>
+      {/* Gradient background */}
+      <LinearGradient
+        colors={[color + '20', color + '05']}
+        style={styles.chartGradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      
       {/* Grid lines for professional look */}
       <View style={styles.gridContainer}>
         <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '25%' }]} />
@@ -38,7 +48,7 @@ const ClassicLineChart = ({
         <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '75%' }]} />
       </View>
       
-      {/* Data line segments */}
+      {/* Data line segments with enhanced styling */}
       {points.slice(0, -1).map((point, index) => {
         const nextPoint = points[index + 1];
         const lineWidth = Math.sqrt(
@@ -58,17 +68,85 @@ const ClassicLineChart = ({
                 backgroundColor: color,
                 transform: [{ rotate: `${angle}deg` }],
                 transformOrigin: '0 50%',
+                height: 3, // Slightly thicker line
+                shadowColor: color,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.4,
+                shadowRadius: 2,
+                elevation: 2,
               }
             ]}
           />
         );
       })}
+      
+      {/* Data points with glow effect */}
+      {points.map((point, index) => (
+        <View
+          key={`point-${index}`}
+          style={[
+            styles.dataPoint,
+            {
+              left: point.x - 3,
+              top: point.y - 3,
+              backgroundColor: color,
+              shadowColor: color,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 4,
+              elevation: 4,
+            }
+          ]}
+        />
+      ))}
     </View>
   );
 };
 
 export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Pulse animation for heart rate
+  useEffect(() => {
+    const pulse = () => {
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setTimeout(pulse, 1000); // Pause between beats
+      });
+    };
+    pulse();
+  }, [pulseAnim]);
+
+  // Floating animation for cards
+  useEffect(() => {
+    const float = () => {
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]).start(float);
+    };
+    float();
+  }, [floatAnim]);
 
   // Mock health data for development
   const healthData = {
@@ -114,9 +192,9 @@ export default function DashboardScreen() {
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
-      case 'rising': return '#FF9800';
-      case 'falling': return '#2196F3';
-      default: return '#4CAF50'; // stable is green
+      case 'rising': return '#FF6B6B'; // Coral red
+      case 'falling': return '#4ECDC4'; // Turquoise
+      default: return '#45B7D1'; // Sky blue
     }
   };
 
@@ -153,27 +231,27 @@ export default function DashboardScreen() {
 
   // Function to get health status and color
   const getHeartRateStatus = (hr: number) => {
-    if (hr < 60) return { status: 'Low', color: '#FF9800', alert: true };
-    if (hr > 100) return { status: 'High', color: '#F44336', alert: true };
-    return { status: 'Normal', color: '#4CAF50', alert: false };
+    if (hr < 60) return { status: 'Low', color: '#FFA07A', alert: true }; // Light salmon
+    if (hr > 100) return { status: 'High', color: '#FF6B6B', alert: true }; // Coral red
+    return { status: 'Normal', color: '#98D8C8', alert: false }; // Mint green
   };
 
   const getSpO2Status = (spo2: number) => {
-    if (spo2 < 95) return { status: 'Low', color: '#F44336', alert: true };
-    if (spo2 >= 95 && spo2 <= 100) return { status: 'Normal', color: '#4CAF50', alert: false };
-    return { status: 'High', color: '#FF9800', alert: false };
+    if (spo2 < 95) return { status: 'Low', color: '#FF6B6B', alert: true }; // Coral red
+    if (spo2 >= 95 && spo2 <= 100) return { status: 'Normal', color: '#98D8C8', alert: false }; // Mint green
+    return { status: 'High', color: '#FFA07A', alert: false }; // Light salmon
   };
 
   const getTemperatureStatus = (temp: number) => {
-    if (temp < 36.1) return { status: 'Low', color: '#2196F3', alert: false };
-    if (temp > 37.2) return { status: 'High', color: '#F44336', alert: true };
-    return { status: 'Normal', color: '#4CAF50', alert: false };
+    if (temp < 36.1) return { status: 'Low', color: '#87CEEB', alert: false }; // Sky blue
+    if (temp > 37.2) return { status: 'High', color: '#FF6B6B', alert: true }; // Coral red
+    return { status: 'Normal', color: '#98D8C8', alert: false }; // Mint green
   };
 
   const getDeviceStatus = (status: string) => {
-    if (status === 'Connected') return { status: 'Connected', color: '#4CAF50' };
-    if (status === 'Disconnected') return { status: 'Disconnected', color: '#F44336' };
-    return { status: 'Unknown', color: '#FF9800' };
+    if (status === 'Connected') return { status: 'Connected', color: '#98D8C8' }; // Mint green
+    if (status === 'Disconnected') return { status: 'Disconnected', color: '#FF6B6B' }; // Coral red
+    return { status: 'Unknown', color: '#FFA07A' }; // Light salmon
   };
 
   const heartRateStatus = getHeartRateStatus(healthData.heartRate);
@@ -186,183 +264,334 @@ export default function DashboardScreen() {
     .filter(status => status.alert).length;
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.title}>Health Dashboard</Text>
-          <View style={styles.batteryContainer}>
-            <Text style={styles.batteryText}>{healthData.batteryLevel}%</Text>
-            <View style={[
-              styles.batteryIcon, 
-              { backgroundColor: healthData.batteryLevel > 20 ? '#4CAF50' : '#F44336' }
-            ]} />
-          </View>
-        </View>
-        <View style={styles.headerInfo}>
-          <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
-          <View style={styles.alertSummary}>
-            {activeAlerts > 0 ? (
-              <Text style={styles.alertSummaryText}>
-                ⚠️ {activeAlerts} Alert{activeAlerts > 1 ? 's' : ''}
-              </Text>
-            ) : (
-              <Text style={styles.noAlertText}>✅ All Normal</Text>
-            )}
-          </View>
-          <View style={styles.deviceStatusHeader}>
-            <View style={[styles.statusDot, { backgroundColor: deviceStatusInfo.color }]} />
-            <Text style={styles.deviceStatusText}>{healthData.deviceStatus}</Text>
-          </View>
-        </View>
-        <View style={styles.emergencyContainer}>
-          <Text style={styles.emergencyButton} onPress={handleEmergencyCall}>
-            🚨 Emergency Call
-          </Text>
-          <Text style={styles.emergencyNote}>
-            {healthData.emergencyContactsCount} contacts available
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.metricsContainer}>
-        {/* Heart Rate Card */}
-        <View style={[
-          styles.metricCard, 
-          heartRateStatus.alert && styles.alertCard
-        ]}>
-          <View style={styles.metricHeader}>
-            <Text style={styles.metricLabel}>Heart Rate</Text>
-            <View style={[styles.trendBadgeSmall, { backgroundColor: getTrendColor(heartRateInsights.trend) }]}>
-              <Text style={styles.trendIconSmall}>{getTrendIcon(heartRateInsights.trend)}</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#667eea', '#764ba2']}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <ScrollView 
+        style={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <LinearGradient
+          colors={['#4FACFE', '#00F2FE']}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.headerTop}>
+            <Text style={styles.title}>Health Dashboard</Text>
+            <View style={styles.batteryContainer}>
+              <Text style={styles.batteryText}>{healthData.batteryLevel}%</Text>
+              <LinearGradient
+                colors={healthData.batteryLevel > 20 ? ['#00ff87', '#60efff'] : ['#ff6b6b', '#ffa726']}
+                style={styles.batteryIcon}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
             </View>
-            {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
           </View>
-          <View style={styles.valueContainer}>
-            <Text style={styles.metricValue}>{healthData.heartRate}</Text>
-            <Text style={styles.metricUnit}>BPM</Text>
-          </View>
-          <ClassicLineChart 
-            data={trendData.heartRate}
-            color={heartRateStatus.color}
-            width={220}
-            height={45}
-          />
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
-            <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
-            <Text style={styles.trendTextInline}>• {getTrendLabel(heartRateInsights.trend)}</Text>
-          </View>
-          <View style={styles.insightsContainer}>
-            <Text style={styles.insightText}>24h Avg: {heartRateInsights.average24h} BPM</Text>
-            <Text style={styles.rangeText}>Normal: 60-100 BPM</Text>
-            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
-          </View>
-        </View>
-
-        {/* SpO2 Card */}
-        <View style={[
-          styles.metricCard,
-          spO2Status.alert && styles.alertCard
-        ]}>
-          <View style={styles.metricHeader}>
-            <Text style={styles.metricLabel}>SpO₂</Text>
-            <View style={[styles.trendBadgeSmall, { backgroundColor: getTrendColor(spO2Insights.trend) }]}>
-              <Text style={styles.trendIconSmall}>{getTrendIcon(spO2Insights.trend)}</Text>
-            </View>
-            {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
-          </View>
-          <View style={styles.valueContainer}>
-            <Text style={styles.metricValue}>{healthData.spO2}</Text>
-            <Text style={styles.metricUnit}>%</Text>
-          </View>
-          <ClassicLineChart 
-            data={trendData.spO2}
-            color={spO2Status.color}
-            width={220}
-            height={45}
-          />
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
-            <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
-            <Text style={styles.trendTextInline}>• {getTrendLabel(spO2Insights.trend)}</Text>
-          </View>
-          <View style={styles.insightsContainer}>
-            <Text style={styles.insightText}>24h Avg: {spO2Insights.average24h}%</Text>
-            <Text style={styles.rangeText}>Normal: 95-100%</Text>
-            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
-          </View>
-        </View>
-
-        {/* Temperature Card */}
-        <View style={[
-          styles.metricCard,
-          temperatureStatus.alert && styles.alertCard
-        ]}>
-          <View style={styles.metricHeader}>
-            <Text style={styles.metricLabel}>Temperature</Text>
-          </View>
-          <View style={styles.valueContainer}>
-            <Text style={styles.metricValue}>{healthData.temperature}</Text>
-            <Text style={styles.metricUnit}>°C</Text>
-          </View>
-          <ClassicLineChart 
-            data={trendData.temperature}
-            color={temperatureStatus.color}
-            width={220}
-            height={45}
-          />
-          <View style={styles.statusRow}>
-            <View style={styles.statusContainer}>
-              <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
-              <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
-            </View>
-            <View style={styles.trendIndicator}>
-              {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
-              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(temperatureInsights.trend) }]}>
-                <Text style={styles.trendIcon}>{getTrendIcon(temperatureInsights.trend)}</Text>
-                <Text style={styles.trendText}>
-                  {getTrendLabel(temperatureInsights.trend)}
+          <View style={styles.headerInfo}>
+            <Text style={styles.lastUpdate}>Last update: {healthData.lastUpdate}</Text>
+            <LinearGradient
+              colors={activeAlerts > 0 ? ['#ff9800', '#ff5722'] : ['#4caf50', '#8bc34a']}
+              style={styles.alertSummary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {activeAlerts > 0 ? (
+                <Text style={styles.alertSummaryText}>
+                  ⚠️ {activeAlerts} Alert{activeAlerts > 1 ? 's' : ''}
                 </Text>
-              </View>
+              ) : (
+                <Text style={styles.noAlertText}>✅ All Normal</Text>
+              )}
+            </LinearGradient>
+            <View style={styles.deviceStatusHeader}>
+              <LinearGradient
+                colors={healthData.deviceStatus === 'Connected' ? ['#00ff87', '#60efff'] : ['#ff6b6b', '#ffa726']}
+                style={styles.statusDot}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+              <Text style={styles.deviceStatusText}>{healthData.deviceStatus}</Text>
             </View>
           </View>
-          <View style={styles.insightsContainer}>
-            <Text style={styles.insightText}>24h Avg: {temperatureInsights.average24h}°C</Text>
-            <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
-            <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
-          </View>
+          <LinearGradient
+            colors={['#ff6b6b', '#ff8e53']}
+            style={styles.emergencyContainer}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={styles.emergencyButton} onPress={handleEmergencyCall}>
+              🚨 Emergency Call
+            </Text>
+            <Text style={styles.emergencyNote}>
+              {healthData.emergencyContactsCount} contacts available
+            </Text>
+          </LinearGradient>
+        </LinearGradient>
+
+        <View style={styles.metricsContainer}>
+          {/* Heart Rate Card */}
+          <Animated.View 
+            style={[
+              styles.metricCard, 
+              heartRateStatus.alert && styles.alertCard,
+              {
+                transform: [{ 
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -2],
+                  })
+                }]
+              }
+            ]}
+          >
+            <LinearGradient
+              colors={['#ff9a9e', '#fecfef']}
+              style={styles.cardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <View style={styles.metricHeader}>
+              <View style={styles.labelWithIcon}>
+                <LinearGradient
+                  colors={['#FF6B6B', '#FF8A80']}
+                  style={styles.iconBackground}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                    <Ionicons name="heart" size={22} color="#ffffff" style={styles.metricIcon} />
+                  </Animated.View>
+                </LinearGradient>
+                <Text style={styles.metricLabel}>Heart Rate</Text>
+              </View>
+              <LinearGradient
+                colors={[getTrendColor(heartRateInsights.trend), getTrendColor(heartRateInsights.trend) + '80']}
+                style={styles.trendBadgeSmall}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.trendIconSmall}>{getTrendIcon(heartRateInsights.trend)}</Text>
+              </LinearGradient>
+              {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+            </View>
+            <View style={styles.valueContainer}>
+              <Text style={styles.metricValue}>{healthData.heartRate}</Text>
+              <Text style={styles.metricUnit}>BPM</Text>
+            </View>
+            <ClassicLineChart 
+              data={trendData.heartRate}
+              color={heartRateStatus.color}
+              width={220}
+              height={45}
+            />
+            <View style={styles.statusContainer}>
+              <LinearGradient
+                colors={[heartRateStatus.color, heartRateStatus.color + '80']}
+                style={styles.statusDot}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
+              <Text style={styles.trendTextInline}>• {getTrendLabel(heartRateInsights.trend)}</Text>
+            </View>
+            <View style={styles.insightsContainer}>
+              <Text style={styles.insightText}>24h Avg: {heartRateInsights.average24h} BPM</Text>
+              <Text style={styles.rangeText}>Normal: 60-100 BPM</Text>
+              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+            </View>
+          </Animated.View>
+
+          {/* SpO2 Card */}
+          <Animated.View 
+            style={[
+              styles.metricCard,
+              spO2Status.alert && styles.alertCard,
+              {
+                transform: [{ 
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -1],
+                  })
+                }]
+              }
+            ]}
+          >
+            <LinearGradient
+              colors={['#a8edea', '#fed6e3']}
+              style={styles.cardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <View style={styles.metricHeader}>
+              <View style={styles.labelWithIcon}>
+                <LinearGradient
+                  colors={['#4ECDC4', '#44A08D']}
+                  style={styles.iconBackground}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="water" size={22} color="#ffffff" style={styles.metricIcon} />
+                </LinearGradient>
+                <Text style={styles.metricLabel}>SpO₂</Text>
+              </View>
+              <LinearGradient
+                colors={[getTrendColor(spO2Insights.trend), getTrendColor(spO2Insights.trend) + '80']}
+                style={styles.trendBadgeSmall}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.trendIconSmall}>{getTrendIcon(spO2Insights.trend)}</Text>
+              </LinearGradient>
+              {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+            </View>
+            <View style={styles.valueContainer}>
+              <Text style={styles.metricValue}>{healthData.spO2}</Text>
+              <Text style={styles.metricUnit}>%</Text>
+            </View>
+            <ClassicLineChart 
+              data={trendData.spO2}
+              color={spO2Status.color}
+              width={220}
+              height={45}
+            />
+            <View style={styles.statusContainer}>
+              <LinearGradient
+                colors={[spO2Status.color, spO2Status.color + '80']}
+                style={styles.statusDot}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
+              <Text style={styles.trendTextInline}>• {getTrendLabel(spO2Insights.trend)}</Text>
+            </View>
+            <View style={styles.insightsContainer}>
+              <Text style={styles.insightText}>24h Avg: {spO2Insights.average24h}%</Text>
+              <Text style={styles.rangeText}>Normal: 95-100%</Text>
+              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+            </View>
+          </Animated.View>
+
+          {/* Temperature Card */}
+          <Animated.View 
+            style={[
+              styles.metricCard,
+              temperatureStatus.alert && styles.alertCard,
+              {
+                transform: [{ 
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -1.5],
+                  })
+                }]
+              }
+            ]}
+          >
+            <LinearGradient
+              colors={['#ffecd2', '#fcb69f']}
+              style={styles.cardGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <View style={styles.metricHeader}>
+              <View style={styles.labelWithIcon}>
+                <LinearGradient
+                  colors={['#FFB347', '#FF8C00']}
+                  style={styles.iconBackground}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="thermometer" size={22} color="#ffffff" style={styles.metricIcon} />
+                </LinearGradient>
+                <Text style={styles.metricLabel}>Temperature</Text>
+              </View>
+              <LinearGradient
+                colors={[getTrendColor(temperatureInsights.trend), getTrendColor(temperatureInsights.trend) + '80']}
+                style={styles.trendBadgeSmall}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.trendIconSmall}>{getTrendIcon(temperatureInsights.trend)}</Text>
+              </LinearGradient>
+              {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+            </View>
+            <View style={styles.valueContainer}>
+              <Text style={styles.metricValue}>{healthData.temperature}</Text>
+              <Text style={styles.metricUnit}>°C</Text>
+            </View>
+            <ClassicLineChart 
+              data={trendData.temperature}
+              color={temperatureStatus.color}
+              width={220}
+              height={45}
+            />
+            <View style={styles.statusContainer}>
+              <LinearGradient
+                colors={[temperatureStatus.color, temperatureStatus.color + '80']}
+                style={styles.statusDot}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
+              <Text style={styles.trendTextInline}>• {getTrendLabel(temperatureInsights.trend)}</Text>
+            </View>
+            <View style={styles.insightsContainer}>
+              <Text style={styles.insightText}>24h Avg: {temperatureInsights.average24h}°C</Text>
+              <Text style={styles.rangeText}>Normal: 36.1-37.2°C</Text>
+              <Text style={styles.timestampText}>Updated: {healthData.timestamp}</Text>
+            </View>
+          </Animated.View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: '100%',
+  },
+  scrollContainer: {
+    flex: 1,
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: '#4FACFE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   lastUpdate: {
     fontSize: 15,
-    color: '#555',
+    color: '#ffffff',
     marginTop: 4,
     fontWeight: '500',
+    opacity: 0.9,
   },
   headerInfo: {
     flexDirection: 'row',
@@ -377,24 +606,37 @@ const styles = StyleSheet.create({
   },
   deviceStatusText: {
     fontSize: 13,
-    color: '#555',
+    color: '#ffffff',
     fontWeight: '600',
+    opacity: 0.9,
   },
   metricsContainer: {
     padding: 16,
   },
   metricCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
+    position: 'relative',
+    backgroundColor: '#ffffff',
+    padding: 24,
+    borderRadius: 24,
     width: '100%',
-    marginBottom: 16,
+    marginBottom: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    overflow: 'hidden',
+  },
+  cardGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    opacity: 0.1,
   },
   metricLabel: {
     fontSize: 16,
@@ -403,14 +645,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   metricValue: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1e293b',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   metricUnit: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: '#64748b',
     marginLeft: 4,
+    fontWeight: '600',
   },
   valueContainer: {
     flexDirection: 'row',
@@ -429,9 +675,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: 6,
   },
   statusTextNew: {
@@ -509,11 +755,32 @@ const styles = StyleSheet.create({
   },
   classicChart: {
     position: 'relative',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f8fafc',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    marginVertical: 8,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  chartGradientBackground: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  dataPoint: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 4,
-    marginVertical: 6,
+    borderColor: '#ffffff',
   },
   gridContainer: {
     position: 'absolute',
@@ -542,6 +809,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
     paddingHorizontal: 4,
+    width: '100%',
   },
   trendIndicator: {
     flexDirection: 'row',
@@ -591,47 +859,55 @@ const styles = StyleSheet.create({
   },
   batteryText: {
     fontSize: 13,
-    color: '#555',
+    color: '#ffffff',
     marginRight: 4,
-    fontWeight: '500',
+    fontWeight: '600',
+    opacity: 0.9,
   },
   batteryIcon: {
-    width: 20,
-    height: 10,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    width: 22,
+    height: 12,
+    borderRadius: 3,
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   emergencyContainer: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#ffebee',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ffcdd2',
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: '#ff6b6b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   emergencyButton: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#d32f2f',
+    color: '#ffffff',
     textAlign: 'center',
-    padding: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#f44336',
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   emergencyNote: {
     fontSize: 12,
-    color: '#555',
+    color: '#ffffff',
     textAlign: 'center',
     marginTop: 4,
     fontWeight: '500',
+    opacity: 0.9,
   },
   alertCard: {
     borderWidth: 2,
     borderColor: '#FF9800',
-    backgroundColor: '#fff8e1',
   },
   alertIcon: {
     fontSize: 12,
@@ -647,19 +923,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   alertSummary: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   alertSummaryText: {
     fontSize: 13,
-    color: '#FF9800',
+    color: '#ffffff',
     fontWeight: '700',
   },
   noAlertText: {
     fontSize: 13,
-    color: '#4CAF50',
+    color: '#ffffff',
     fontWeight: '700',
   },
   labelRow: {
@@ -668,15 +945,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   trendBadgeSmall: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
   },
   trendIconSmall: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#ffffff',
     fontWeight: 'bold',
   },
@@ -685,5 +967,38 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 8,
     fontWeight: '500',
+  },
+  labelWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  metricIcon: {
+    // Removed marginRight to center icon properly in circular background
+  },
+  iconBackground: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  heartRateCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#E91E63',
+  },
+  spO2Card: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  temperatureCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
   },
 });
