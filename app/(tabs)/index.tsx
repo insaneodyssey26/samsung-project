@@ -1,40 +1,67 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 
-// Mini Graph Component
-interface MiniGraphProps {
+// Classic Medical-Style Line Chart
+interface ClassicLineChartProps {
   data: number[];
   color: string;
   width?: number;
   height?: number;
 }
 
-const MiniGraph = ({ data, color, width = 80, height = 30 }: MiniGraphProps) => {
+const ClassicLineChart = ({ 
+  data, 
+  color, 
+  width = 220, 
+  height = 50 
+}: ClassicLineChartProps) => {
   if (!data || data.length < 2) return null;
   
   const maxValue = Math.max(...data);
   const minValue = Math.min(...data);
   const valueRange = maxValue - minValue || 1;
+  const padding = 4;
   
-  const points = data.map((value: number, index: number) => {
-    const x = (index / (data.length - 1)) * width;
-    const y = height - ((value - minValue) / valueRange) * height;
-    return `${x},${y}`;
-  }).join(' L');
-  
-  const pathData = `M${points}`;
-  
+  const points = data.map((value, index) => {
+    const x = padding + (index / (data.length - 1)) * (width - 2 * padding);
+    const y = padding + (1 - (value - minValue) / valueRange) * (height - 2 * padding);
+    return { x, y };
+  });
+
   return (
-    <Svg width={width} height={height} style={{ marginVertical: 4 }}>
-      <Path
-        d={pathData}
-        stroke={color}
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <View style={[styles.classicChart, { width, height }]}>
+      {/* Grid lines for professional look */}
+      <View style={styles.gridContainer}>
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '25%' }]} />
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '50%' }]} />
+        <View style={[styles.gridLine, styles.gridLineHorizontal, { top: '75%' }]} />
+      </View>
+      
+      {/* Data line segments */}
+      {points.slice(0, -1).map((point, index) => {
+        const nextPoint = points[index + 1];
+        const lineWidth = Math.sqrt(
+          Math.pow(nextPoint.x - point.x, 2) + Math.pow(nextPoint.y - point.y, 2)
+        );
+        const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+        
+        return (
+          <View
+            key={`segment-${index}`}
+            style={[
+              styles.dataLine,
+              {
+                width: lineWidth,
+                left: point.x,
+                top: point.y,
+                backgroundColor: color,
+                transform: [{ rotate: `${angle}deg` }],
+                transformOrigin: '0 50%',
+              }
+            ]}
+          />
+        );
+      })}
+    </View>
   );
 };
 
@@ -106,11 +133,11 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.heartRate}</Text>
             <Text style={styles.metricUnit}>BPM</Text>
           </View>
-          <MiniGraph 
-            data={trendData.heartRate} 
+          <ClassicLineChart 
+            data={trendData.heartRate}
             color={heartRateStatus.color}
-            width={120}
-            height={30}
+            width={220}
+            height={45}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
@@ -126,11 +153,11 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.spO2}</Text>
             <Text style={styles.metricUnit}>%</Text>
           </View>
-          <MiniGraph 
-            data={trendData.spO2} 
+          <ClassicLineChart 
+            data={trendData.spO2}
             color={spO2Status.color}
-            width={120}
-            height={30}
+            width={220}
+            height={45}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
@@ -146,11 +173,11 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.temperature}</Text>
             <Text style={styles.metricUnit}>°C</Text>
           </View>
-          <MiniGraph 
-            data={trendData.temperature} 
+          <ClassicLineChart 
+            data={trendData.temperature}
             color={temperatureStatus.color}
-            width={120}
-            height={30}
+            width={220}
+            height={45}
           />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
@@ -256,5 +283,95 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 4,
     textAlign: 'center',
+  },
+  progressLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  graphContainer: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  graphLine: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: '100%',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  graphBar: {
+    width: 4,
+    borderRadius: 2,
+    minHeight: 2,
+  },
+  chartContainer: {
+    position: 'relative',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 8,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  chartLine: {
+    position: 'absolute',
+    height: 2,
+    borderRadius: 1,
+    opacity: 0.8,
+  },
+  chartDot: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  chartBackground: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    opacity: 0.1,
+    borderRadius: 1,
+  },
+  classicChart: {
+    position: 'relative',
+    backgroundColor: '#fafafa',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    marginVertical: 6,
+  },
+  gridContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  gridLine: {
+    position: 'absolute',
+    backgroundColor: '#e8e8e8',
+  },
+  gridLineHorizontal: {
+    left: 0,
+    right: 0,
+    height: 1,
+  },
+  dataLine: {
+    position: 'absolute',
+    height: 2,
+    transformOrigin: '0 50%',
   },
 });
