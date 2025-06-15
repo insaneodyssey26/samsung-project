@@ -237,15 +237,10 @@ export default function DashboardScreen() {
         ]}>
           <View style={styles.metricHeader}>
             <Text style={styles.metricLabel}>Heart Rate</Text>
-            <View style={styles.trendIndicator}>
-              {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
-              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(heartRateInsights.trend) }]}>
-                <Text style={styles.trendIcon}>{getTrendIcon(heartRateInsights.trend)}</Text>
-                <Text style={styles.trendText}>
-                  {getTrendLabel(heartRateInsights.trend)}
-                </Text>
-              </View>
+            <View style={[styles.trendBadgeSmall, { backgroundColor: getTrendColor(heartRateInsights.trend) }]}>
+              <Text style={styles.trendIconSmall}>{getTrendIcon(heartRateInsights.trend)}</Text>
             </View>
+            {heartRateStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
           </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.heartRate}</Text>
@@ -260,6 +255,7 @@ export default function DashboardScreen() {
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
             <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
+            <Text style={styles.trendTextInline}>• {getTrendLabel(heartRateInsights.trend)}</Text>
           </View>
           <View style={styles.insightsContainer}>
             <Text style={styles.insightText}>24h Avg: {heartRateInsights.average24h} BPM</Text>
@@ -275,15 +271,10 @@ export default function DashboardScreen() {
         ]}>
           <View style={styles.metricHeader}>
             <Text style={styles.metricLabel}>SpO₂</Text>
-            <View style={styles.trendIndicator}>
-              {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
-              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(spO2Insights.trend) }]}>
-                <Text style={styles.trendIcon}>{getTrendIcon(spO2Insights.trend)}</Text>
-                <Text style={styles.trendText}>
-                  {getTrendLabel(spO2Insights.trend)}
-                </Text>
-              </View>
+            <View style={[styles.trendBadgeSmall, { backgroundColor: getTrendColor(spO2Insights.trend) }]}>
+              <Text style={styles.trendIconSmall}>{getTrendIcon(spO2Insights.trend)}</Text>
             </View>
+            {spO2Status.alert && <Text style={styles.alertIcon}>⚠️</Text>}
           </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.spO2}</Text>
@@ -298,6 +289,7 @@ export default function DashboardScreen() {
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
             <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
+            <Text style={styles.trendTextInline}>• {getTrendLabel(spO2Insights.trend)}</Text>
           </View>
           <View style={styles.insightsContainer}>
             <Text style={styles.insightText}>24h Avg: {spO2Insights.average24h}%</Text>
@@ -313,15 +305,6 @@ export default function DashboardScreen() {
         ]}>
           <View style={styles.metricHeader}>
             <Text style={styles.metricLabel}>Temperature</Text>
-            <View style={styles.trendIndicator}>
-              {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
-              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(temperatureInsights.trend) }]}>
-                <Text style={styles.trendIcon}>{getTrendIcon(temperatureInsights.trend)}</Text>
-                <Text style={styles.trendText}>
-                  {getTrendLabel(temperatureInsights.trend)}
-                </Text>
-              </View>
-            </View>
           </View>
           <View style={styles.valueContainer}>
             <Text style={styles.metricValue}>{healthData.temperature}</Text>
@@ -333,9 +316,20 @@ export default function DashboardScreen() {
             width={220}
             height={45}
           />
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
-            <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
+              <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
+            </View>
+            <View style={styles.trendIndicator}>
+              {temperatureStatus.alert && <Text style={styles.alertIcon}>⚠️</Text>}
+              <View style={[styles.trendBadge, { backgroundColor: getTrendColor(temperatureInsights.trend) }]}>
+                <Text style={styles.trendIcon}>{getTrendIcon(temperatureInsights.trend)}</Text>
+                <Text style={styles.trendText}>
+                  {getTrendLabel(temperatureInsights.trend)}
+                </Text>
+              </View>
+            </View>
           </View>
           <View style={styles.insightsContainer}>
             <Text style={styles.insightText}>24h Avg: {temperatureInsights.average24h}°C</Text>
@@ -405,8 +399,8 @@ const styles = StyleSheet.create({
   metricLabel: {
     fontSize: 16,
     color: '#333',
-    marginBottom: 8,
     fontWeight: '600',
+    flex: 1,
   },
   metricValue: {
     fontSize: 32,
@@ -425,6 +419,12 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
@@ -541,11 +541,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    paddingHorizontal: 4,
   },
   trendIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 12,
   },
   trendBadge: {
     flexDirection: 'row',
@@ -661,5 +661,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4CAF50',
     fontWeight: '700',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trendBadgeSmall: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 16,
+  },
+  trendIconSmall: {
+    fontSize: 10,
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
+  trendTextInline: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
