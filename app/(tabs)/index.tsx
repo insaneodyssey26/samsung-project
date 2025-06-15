@@ -266,7 +266,7 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={['#f8fafc', '#e2e8f0']}
         style={styles.backgroundGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -278,7 +278,7 @@ export default function DashboardScreen() {
         }
       >
         <LinearGradient
-          colors={['#4FACFE', '#00F2FE']}
+          colors={['#334155', '#475569']}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: '#4FACFE',
+    shadowColor: '#334155',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
