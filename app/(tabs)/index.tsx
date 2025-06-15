@@ -1,4 +1,42 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+
+// Mini Graph Component
+interface MiniGraphProps {
+  data: number[];
+  color: string;
+  width?: number;
+  height?: number;
+}
+
+const MiniGraph = ({ data, color, width = 80, height = 30 }: MiniGraphProps) => {
+  if (!data || data.length < 2) return null;
+  
+  const maxValue = Math.max(...data);
+  const minValue = Math.min(...data);
+  const valueRange = maxValue - minValue || 1;
+  
+  const points = data.map((value: number, index: number) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - ((value - minValue) / valueRange) * height;
+    return `${x},${y}`;
+  }).join(' L');
+  
+  const pathData = `M${points}`;
+  
+  return (
+    <Svg width={width} height={height} style={{ marginVertical: 4 }}>
+      <Path
+        d={pathData}
+        stroke={color}
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+};
 
 export default function DashboardScreen() {
   // Mock health data for development
@@ -8,6 +46,13 @@ export default function DashboardScreen() {
     temperature: 36.5,
     deviceStatus: 'Connected',
     lastUpdate: '2 mins ago'
+  };
+
+  // Mock trend data (last 10 readings)
+  const trendData = {
+    heartRate: [68, 70, 72, 69, 71, 73, 72, 74, 71, 72],
+    spO2: [97, 98, 99, 98, 97, 98, 99, 98, 97, 98],
+    temperature: [36.3, 36.4, 36.5, 36.4, 36.6, 36.5, 36.4, 36.5, 36.6, 36.5],
   };
 
   // Function to get health status and color
@@ -55,6 +100,12 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.heartRate}</Text>
             <Text style={styles.metricUnit}>BPM</Text>
           </View>
+          <MiniGraph 
+            data={trendData.heartRate} 
+            color={heartRateStatus.color}
+            width={70}
+            height={25}
+          />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: heartRateStatus.color }]} />
             <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
@@ -69,6 +120,12 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.spO2}</Text>
             <Text style={styles.metricUnit}>%</Text>
           </View>
+          <MiniGraph 
+            data={trendData.spO2} 
+            color={spO2Status.color}
+            width={70}
+            height={25}
+          />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: spO2Status.color }]} />
             <Text style={styles.statusTextNew}>{spO2Status.status}</Text>
@@ -83,6 +140,12 @@ export default function DashboardScreen() {
             <Text style={styles.metricValue}>{healthData.temperature}</Text>
             <Text style={styles.metricUnit}>°C</Text>
           </View>
+          <MiniGraph 
+            data={trendData.temperature} 
+            color={temperatureStatus.color}
+            width={70}
+            height={25}
+          />
           <View style={styles.statusContainer}>
             <View style={[styles.statusDot, { backgroundColor: temperatureStatus.color }]} />
             <Text style={styles.statusTextNew}>{temperatureStatus.status}</Text>
