@@ -1,8 +1,10 @@
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, RefreshControl, Modal, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Alert {
   id: string;
@@ -20,6 +22,14 @@ export default function AlertsScreen() {
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  // Animation values
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  
   // Mock health data (in real app, this would come from a context or API)
   const getCurrentHealthData = () => ({
     heartRate: 105, // High heart rate to trigger alert
@@ -157,6 +167,7 @@ export default function AlertsScreen() {
       case 'device': return 'hardware-chip';
     }
   };
+  
   const getAlertColor = (type: Alert['type'], priority: Alert['priority']): [string, string] => {
     if (priority === 'high') return ['#dc2626', '#ef4444'];
     if (priority === 'medium') return ['#d97706', '#f59e0b'];
@@ -169,25 +180,135 @@ export default function AlertsScreen() {
       case 'medium': return 'WARNING';
       case 'low': return 'INFO';
     }
-  };
-
-  const dismissAlert = (alertId: string) => {
+  };  const dismissAlert = (alertId: string) => {
     setAlerts(alerts.filter(alert => alert.id !== alertId));
   };
+
+  const openAlertDetails = (alert: Alert) => {
+    setSelectedAlert(alert);
+    setModalVisible(true);
+    // Animate modal in
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeAlertDetails = () => {
+    // Animate modal out
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setModalVisible(false);
+      setSelectedAlert(null);
+      // Reset animation values
+      slideAnim.setValue(SCREEN_HEIGHT);
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.8);
+    });
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>      <LinearGradient
-        colors={colors.headerBackground}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Professional Header */}
+      <LinearGradient
+        colors={['#ffffff', '#fafafa']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
       >
         <View style={styles.headerContent}>
-          <Ionicons name="notifications" size={24} color={colors.headerText} style={styles.headerIcon} />
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.title, { color: colors.headerText }]}>Active Alerts</Text>
-            <Text style={[styles.subtitle, { color: colors.headerSecondary }]}>
-              {alerts.length > 0 ? `${alerts.length} alert${alerts.length > 1 ? 's' : ''}` : 'All systems normal'}
-            </Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.titleContainer}>
+              <View style={styles.titleRow}>
+                <LinearGradient
+                  colors={alerts.length > 0 ? ['#ef4444', '#dc2626'] : ['#059669', '#047857']}
+                  style={[styles.alertIndicator, {
+                    shadowColor: alerts.length > 0 ? '#ef4444' : '#059669',
+                  }]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons 
+                    name={alerts.length > 0 ? "alert-circle-outline" : "shield-checkmark-outline"} 
+                    size={20} 
+                    color="#ffffff" 
+                  />
+                </LinearGradient>
+                <View style={styles.titleTextContainer}>
+                  <Text style={styles.title}>Health Alerts</Text>
+                  <Text style={styles.subtitle}>Real-time monitoring system</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.headerRight}>
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusIndicator, {
+                backgroundColor: alerts.length > 0 ? '#ef4444' : '#22c55e'
+              }]} />
+              <View style={styles.statusTextContainer}>
+                <Text style={styles.statusLabel}>Status</Text>
+                <Text style={[styles.statusValue, {
+                  color: alerts.length > 0 ? '#dc2626' : '#16a34a'
+                }]}>
+                  {alerts.length > 0 ? 'ACTIVE' : 'NORMAL'}
+                </Text>
+              </View>
+            </View>
+            
+            {alerts.length > 0 && (
+              <View style={styles.alertsBadge}>
+                <LinearGradient
+                  colors={['#fef2f2', '#fee2e2']}
+                  style={styles.badgeGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.badgeNumber}>{alerts.length}</Text>
+                </LinearGradient>
+              </View>
+            )}
+          </View>
+        </View>
+        
+        <View style={styles.headerStats}>
+          <View style={styles.statItem}>
+            <Ionicons name="time-outline" size={16} color="#6b7280" />
+            <Text style={styles.statText}>Last check: {getCurrentHealthData().lastUpdate}</Text>
+          </View>
+          <View style={styles.statSeparator} />
+          <View style={styles.statItem}>
+            <Ionicons name="pulse-outline" size={16} color="#6b7280" />
+            <Text style={styles.statText}>Monitoring active</Text>
           </View>
         </View>
       </LinearGradient>
@@ -208,7 +329,7 @@ export default function AlertsScreen() {
               end={{ x: 1, y: 1 }}
             >
               <View style={styles.emptyIconContainer}>
-                <Ionicons name="checkmark-circle" size={64} color="#22c55e" />
+                <Ionicons name="checkmark-circle" size={72} color="#22c55e" />
               </View>
               <Text style={styles.emptyStateTitle}>All Clear!</Text>
               <Text style={styles.emptyStateMessage}>
@@ -220,96 +341,234 @@ export default function AlertsScreen() {
                 </Text>
               </View>
             </LinearGradient>
-          </View>
-        ) : (
-          // Active Alerts
-          alerts.map((alert) => (
-            <View key={alert.id} style={styles.alertCard}>
-              <LinearGradient
-                colors={[colors.cardBackground, colors.surface]}
-                style={styles.alertCardGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              
-              {/* Alert Header */}
-              <View style={styles.alertHeader}>
-                <View style={styles.alertHeaderLeft}>
-                  <LinearGradient
-                    colors={getAlertColor(alert.type, alert.priority)}
-                    style={styles.alertIconContainer}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons 
-                      name={getAlertIcon(alert.type)} 
-                      size={20} 
-                      color="#ffffff" 
-                    />
-                  </LinearGradient>
-                  <View style={styles.alertTitleContainer}>
-                    <Text style={[styles.alertTitle, { color: colors.text }]}>{alert.title}</Text>
+          </View>        ) : (
+          // Active Alerts - Compact Tiles
+          <View style={styles.alertsGrid}>            {alerts.map((alert) => (
+              <TouchableOpacity 
+                key={alert.id} 
+                style={styles.alertTile}
+                onPress={() => openAlertDetails(alert)}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={[colors.cardBackground, colors.surface]}
+                  style={styles.alertTileGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                
+                {/* Compact Alert Header */}
+                <View style={styles.alertTileHeader}>
+                  <View style={styles.alertTileLeft}>
                     <LinearGradient
                       colors={getAlertColor(alert.type, alert.priority)}
-                      style={styles.priorityBadge}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                    >
-                      <Text style={styles.priorityText}>{getPriorityText(alert.priority)}</Text>
-                    </LinearGradient>
-                  </View>
-                </View>
-                <TouchableOpacity 
-                  onPress={() => dismissAlert(alert.id)}
-                  style={styles.dismissButton}
-                >
-                  <Ionicons name="close" size={20} color={colors.textMuted} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Alert Content */}
-              <View style={styles.alertContent}>
-                <Text style={[styles.alertMessage, { color: colors.textSecondary }]}>
-                  {alert.message}
-                </Text>
-                
-                {alert.value && (
-                  <View style={styles.alertValues}>
-                    <View style={styles.alertValueItem}>
-                      <Text style={[styles.alertValueLabel, { color: colors.textMuted }]}>Current Value:</Text>
-                      <Text style={[styles.alertValueText, { color: colors.text }]}>{alert.value}</Text>
-                    </View>
-                    {alert.threshold && (
-                      <View style={styles.alertValueItem}>
-                        <Text style={[styles.alertValueLabel, { color: colors.textMuted }]}>Normal Range:</Text>
-                        <Text style={[styles.alertThresholdText, { color: colors.textMuted }]}>{alert.threshold}</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {alert.action && (
-                  <View style={styles.alertAction}>
-                    <LinearGradient
-                      colors={['#fef3c7', '#fde68a']}
-                      style={styles.actionContainer}
+                      style={styles.alertTileIcon}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Ionicons name="information-circle" size={16} color="#d97706" />
-                      <Text style={styles.actionText}>{alert.action}</Text>
+                      <Ionicons 
+                        name={getAlertIcon(alert.type)} 
+                        size={16} 
+                        color="#ffffff" 
+                      />
                     </LinearGradient>
+                    <View style={styles.alertTileInfo}>
+                      <Text style={[styles.alertTileTitle, { color: colors.text }]} numberOfLines={1}>
+                        {alert.title}
+                      </Text>
+                      <Text style={[styles.alertTileValue, { color: colors.textSecondary }]} numberOfLines={1}>
+                        {alert.value || 'See details'}
+                      </Text>
+                    </View>
                   </View>
-                )}
+                  <View style={styles.alertTileRight}>
+                    <View style={[styles.alertTilePriority, { 
+                      backgroundColor: getAlertColor(alert.type, alert.priority)[0] 
+                    }]}>
+                      <Text style={styles.alertTilePriorityText}>
+                        {getPriorityText(alert.priority)[0]}
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        dismissAlert(alert.id);
+                      }}
+                      style={styles.alertTileDismiss}
+                    >
+                      <Ionicons name="close" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                </View>                {/* Time indicator */}
+                <View style={styles.alertTileTime}>
+                  <Ionicons name="time-outline" size={12} color={colors.textMuted} />
+                  <Text style={[styles.alertTileTimeText, { color: colors.textMuted }]}>
+                    {alert.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </View>
 
-                <Text style={[styles.alertTimestamp, { color: colors.textMuted }]}>
-                  {alert.timestamp.toLocaleTimeString()}
-                </Text>
-              </View>
-            </View>
-          ))
+                {/* Tap indicator */}
+                <View style={styles.alertTapIndicator}>
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={16} 
+                    color={colors.textMuted} 
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </ScrollView>
+
+      {/* Alert Details Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeAlertDetails}
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View 
+            style={[
+              styles.modalBackdrop,
+              {
+                opacity: fadeAnim,
+              }
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.modalBackdropTouch}
+              activeOpacity={1}
+              onPress={closeAlertDetails}
+            />
+          </Animated.View>
+          
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                transform: [
+                  { translateY: slideAnim },
+                  { scale: scaleAnim }
+                ],
+              }
+            ]}
+          >
+            {selectedAlert && (
+              <View style={styles.modalContent}>
+                {/* Modal Header */}
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderLeft}>
+                    <LinearGradient
+                      colors={getAlertColor(selectedAlert.type, selectedAlert.priority)}
+                      style={styles.modalIcon}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Ionicons 
+                        name={getAlertIcon(selectedAlert.type)} 
+                        size={28} 
+                        color="#ffffff" 
+                      />
+                    </LinearGradient>
+                    <View style={styles.modalTitleContainer}>
+                      <Text style={styles.modalTitle}>{selectedAlert.title}</Text>
+                      <LinearGradient
+                        colors={getAlertColor(selectedAlert.type, selectedAlert.priority)}
+                        style={styles.modalPriorityBadge}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                      >
+                        <Text style={styles.modalPriorityText}>
+                          {getPriorityText(selectedAlert.priority)}
+                        </Text>
+                      </LinearGradient>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={closeAlertDetails} style={styles.modalCloseButton}>
+                    <Ionicons name="close" size={24} color={colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Modal Body */}
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>
+                    {selectedAlert.message}
+                  </Text>
+                  
+                  {selectedAlert.value && (
+                    <View style={styles.modalValues}>
+                      <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
+                        Current Readings
+                      </Text>
+                      <View style={styles.modalValueItem}>
+                        <Text style={[styles.modalValueLabel, { color: colors.textMuted }]}>
+                          Current Value:
+                        </Text>
+                        <Text style={[styles.modalValueText, { color: colors.text }]}>
+                          {selectedAlert.value}
+                        </Text>
+                      </View>
+                      {selectedAlert.threshold && (
+                        <View style={styles.modalValueItem}>
+                          <Text style={[styles.modalValueLabel, { color: colors.textMuted }]}>
+                            Normal Range:
+                          </Text>
+                          <Text style={[styles.modalThresholdText, { color: colors.textMuted }]}>
+                            {selectedAlert.threshold}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {selectedAlert.action && (
+                    <View style={styles.modalAction}>
+                      <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
+                        Recommended Action
+                      </Text>
+                      <LinearGradient
+                        colors={['#fef3c7', '#fde68a']}
+                        style={styles.modalActionContainer}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Ionicons name="information-circle" size={20} color="#d97706" />
+                        <Text style={styles.modalActionText}>{selectedAlert.action}</Text>
+                      </LinearGradient>
+                    </View>
+                  )}
+
+                  <View style={styles.modalFooter}>
+                    <View style={styles.modalTimestamp}>
+                      <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+                      <Text style={[styles.modalTimestampText, { color: colors.textMuted }]}>
+                        Alert generated at {selectedAlert.timestamp.toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
+                </ScrollView>
+
+                {/* Modal Actions */}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity 
+                    style={[styles.modalDismissButton, { backgroundColor: colors.surface }]}
+                    onPress={() => {
+                      dismissAlert(selectedAlert.id);
+                      closeAlertDetails();
+                    }}
+                  >
+                    <Text style={[styles.modalDismissButtonText, { color: colors.text }]}>
+                      Dismiss Alert
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -317,33 +576,144 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },  header: {
-    padding: 16,
+  },
+  // Modern Professional Header
+  header: {
     paddingTop: 50,
+    paddingHorizontal: 20,
     paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   headerContent: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  headerIcon: {
-    marginRight: 10,
+  alertIndicator: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  headerTextContainer: {
+  titleTextContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#1f2937',
+    letterSpacing: -0.5,
+    marginBottom: 2,
   },
   subtitle: {
     fontSize: 14,
-    marginTop: 2,
-    opacity: 0.9,
-  },  content: {
+    color: '#6b7280',
+    fontWeight: '500',
+    letterSpacing: 0.1,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statusIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  statusTextContainer: {
+    alignItems: 'flex-end',
+  },
+  statusLabel: {
+    fontSize: 11,
+    color: '#9ca3af',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  statusValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  alertsBadge: {
+    marginTop: 4,
+  },
+  badgeGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fecaca',
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  badgeNumber: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#dc2626',
+    letterSpacing: -0.2,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500',
+    marginLeft: 6,
+  },
+  statSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#d1d5db',
+    marginHorizontal: 16,
+  },
+  content: {
     padding: 12,
   },
-    // Empty State Styles
+  // Empty State Styles
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -352,171 +722,358 @@ const styles = StyleSheet.create({
   },
   emptyStateCard: {
     width: '100%',
-    padding: 24,
-    borderRadius: 16,
+    padding: 32,
+    borderRadius: 20,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.1)',
   },
   emptyIconContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   emptyStateTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#16a34a',
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   emptyStateMessage: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 16,
+    lineHeight: 24,
+    marginBottom: 20,
+    fontWeight: '500',
   },
   emptyStateStats: {
-    paddingTop: 16,
+    paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopColor: 'rgba(34, 197, 94, 0.2)',
+    width: '100%',
   },
   emptyStateStatsText: {
     fontSize: 14,
     color: '#9ca3af',
     textAlign: 'center',
+    fontWeight: '500',
   },
 
-  // Alert Card Styles
-  alertCard: {
+  // Compact Alert Tiles
+  alertsGrid: {
+    flex: 1,
+  },
+  alertTile: {
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+    backgroundColor: '#ffffff',
+    minHeight: 80,
+  },  alertTileExpanded: {
+    minHeight: 'auto',
   },
-  alertCardGradient: {
+  alertTileGradient: {
     position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
   },
-  alertHeader: {
+  alertTileHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    padding: 20,
+    alignItems: 'center',
+    padding: 16,
     paddingBottom: 12,
   },
-  alertHeaderLeft: {
+  alertTileLeft: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flex: 1,
   },
-  alertIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  alertTileIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  alertTitleContainer: {
+  alertTileInfo: {
     flex: 1,
   },
-  alertTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 6,
+  alertTileTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+    letterSpacing: -0.2,
+    color: '#1f2937',
   },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  alertTileValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+  alertTileRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alertTilePriority: {
+    width: 24,
+    height: 24,
     borderRadius: 12,
-    alignSelf: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  priorityText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+  alertTilePriorityText: {
+    fontSize: 12,
+    fontWeight: '800',
     color: '#ffffff',
     letterSpacing: 0.5,
   },
-  dismissButton: {
-    padding: 8,
-    borderRadius: 20,
+  alertTileDismiss: {
+    padding: 6,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.05)',
   },
-  alertContent: {
-    paddingHorizontal: 20,
+  alertTileTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  alertTileTimeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
+    color: '#9ca3af',
+  },
+  alertTapIndicator: {
+    position: 'absolute',
+    bottom: 12,
+    right: 16,
+    padding: 4,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    position: 'relative',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalBackdropTouch: {
+    flex: 1,
+  },
+  modalContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: SCREEN_HEIGHT * 0.85,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 24,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
   },
-  alertMessage: {
-    fontSize: 15,
-    lineHeight: 22,
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1,
+  },
+  modalIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  modalTitleContainer: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: -0.3,
+    color: '#1f2937',
+  },
+  modalPriorityBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modalPriorityText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  modalCloseButton: {
+    padding: 12,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  modalBody: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  modalMessage: {
+    fontSize: 17,
+    lineHeight: 26,
+    marginBottom: 24,
+    color: '#4b5563',
+    fontWeight: '500',
+  },
+  modalSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 16,
+    color: '#1f2937',
+    letterSpacing: -0.2,
   },
-  alertValues: {
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  modalValues: {
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
-  alertValueItem: {
+  modalValueItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  alertValueLabel: {
-    fontSize: 14,
+  modalValueLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  modalValueText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1f2937',
+    letterSpacing: -0.3,
+  },
+  modalThresholdText: {
+    fontSize: 15,
+    color: '#9ca3af',
     fontWeight: '500',
   },
-  alertValueText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  modalAction: {
+    marginBottom: 24,
   },
-  alertThresholdText: {
-    fontSize: 14,
-  },
-  alertAction: {
-    marginBottom: 16,
-  },
-  actionContainer: {
+  modalActionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 119, 6, 0.2)',
   },
-  actionText: {
-    fontSize: 14,
+  modalActionText: {
+    fontSize: 15,
     color: '#92400e',
-    fontWeight: '500',
-    marginLeft: 8,
+    fontWeight: '600',
+    marginLeft: 12,
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  alertTimestamp: {
-    fontSize: 12,
-    textAlign: 'right',
-    fontStyle: 'italic',
+  modalFooter: {
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.08)',
   },
-
-  // Legacy styles (keeping for compatibility)
-  alertDescription: {
+  modalTimestamp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTimestampText: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    marginLeft: 8,
+    color: '#9ca3af',
+    fontWeight: '500',
+  },
+  modalActions: {
+    padding: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.08)',
+  },
+  modalDismissButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalDismissButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
 });
