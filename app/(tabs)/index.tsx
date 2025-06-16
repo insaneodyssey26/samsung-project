@@ -434,8 +434,8 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               />
-              <Text style={styles.statusTextNew}>{heartRateStatus.status}</Text>
-              <Text style={styles.trendTextInline}>• {getTrendLabel(heartRateInsights.trend)}</Text>
+              <Text style={[styles.statusTextNew, { color: colors.text }]}>{heartRateStatus.status}</Text>
+              <Text style={[styles.trendTextInline, { color: colors.textMuted }]}>• {getTrendLabel(heartRateInsights.trend)}</Text>
             </View>
             <View style={styles.insightsContainer}>
               <Text style={[styles.insightText, { color: colors.textMuted }]}>24h Avg: {heartRateInsights.average24h} BPM</Text>
