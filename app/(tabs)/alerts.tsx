@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, RefreshControl, Modal, Animated, Dimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, RefreshControl, Modal, Animated, Dimensions, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
@@ -24,11 +24,11 @@ export default function AlertsScreen() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  
-  // Animation values
+    // Animation values
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
   
   // Mock health data (in real app, this would come from a context or API)
   const getCurrentHealthData = () => ({
@@ -182,57 +182,91 @@ export default function AlertsScreen() {
     }
   };  const dismissAlert = (alertId: string) => {
     setAlerts(alerts.filter(alert => alert.id !== alertId));
-  };
-
-  const openAlertDetails = (alert: Alert) => {
+  };  const openAlertDetails = (alert: Alert) => {
     setSelectedAlert(alert);
+    
+    // Reset animations to initial state before showing modal
+    slideAnim.setValue(SCREEN_HEIGHT);
+    fadeAnim.setValue(0);
+    scaleAnim.setValue(0.9);
+    contentOpacity.setValue(0);
+    
     setModalVisible(true);
-    // Animate modal in
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+    
+    // Start all animations together with proper timing for smoothness
+    Animated.sequence([
+      // Start backdrop fade immediately
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 300,
+        duration: 250,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
         useNativeDriver: true,
       }),
     ]).start();
+    
+    // Modal slide and scale with slight delay for better visual flow
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 65,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 65,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 50);
+    
+    // Content fade in after modal movement starts
+    setTimeout(() => {
+      Animated.timing(contentOpacity, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        useNativeDriver: true,
+      }).start();
+    }, 150);
   };
-
   const closeAlertDetails = () => {
-    // Animate modal out
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 0.8,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setModalVisible(false);
-      setSelectedAlert(null);
-      // Reset animation values
-      slideAnim.setValue(SCREEN_HEIGHT);
-      fadeAnim.setValue(0);
-      scaleAnim.setValue(0.8);
-    });
+    // Start content fade out immediately
+    Animated.timing(contentOpacity, {
+      toValue: 0,
+      duration: 200,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+
+    // Smooth exit animation with proper sequencing
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 350,
+          easing: Easing.bezier(0.4, 0, 0.6, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 350,
+          easing: Easing.bezier(0.4, 0, 0.6, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setModalVisible(false);
+        setSelectedAlert(null);
+      });
+    }, 50);
   };
 
   return (
@@ -454,9 +488,13 @@ export default function AlertsScreen() {
                 ],
               }
             ]}
-          >
-            {selectedAlert && (
-              <View style={styles.modalContent}>
+          >            {selectedAlert && (
+              <Animated.View style={[styles.modalContent, { opacity: contentOpacity }]}>
+                {/* Modal Handle */}
+                <View style={styles.modalHandle}>
+                  <View style={styles.modalHandleBar} />
+                </View>
+                
                 {/* Modal Header */}
                 <View style={styles.modalHeader}>
                   <View style={styles.modalHeaderLeft}>
@@ -558,13 +596,12 @@ export default function AlertsScreen() {
                       dismissAlert(selectedAlert.id);
                       closeAlertDetails();
                     }}
-                  >
-                    <Text style={[styles.modalDismissButtonText, { color: colors.text }]}>
+                  >                    <Text style={[styles.modalDismissButtonText, { color: colors.text }]}>
                       Dismiss Alert
                     </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </Animated.View>
             )}
           </Animated.View>
         </View>
@@ -890,24 +927,38 @@ const styles = StyleSheet.create({
   },
   modalBackdropTouch: {
     flex: 1,
-  },
-  modalContainer: {
+  },  modalContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     maxHeight: SCREEN_HEIGHT * 0.85,
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
-    elevation: 16,
-  },
-  modalContent: {
+    elevation: 20,
+    // Add a subtle border for better definition
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    // Ensure smooth rendering
+    overflow: 'hidden',
+  },modalContent: {
     flex: 1,
+  },
+  modalHandle: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  modalHandleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#d1d5db',
+    borderRadius: 2,
   },
   modalHeader: {
     flexDirection: 'row',
