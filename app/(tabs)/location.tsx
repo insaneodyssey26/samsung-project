@@ -1,7 +1,7 @@
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, RefreshControl } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function LocationScreen() {
@@ -58,45 +58,26 @@ export default function LocationScreen() {
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <View style={styles.titleContainer}>
-              <View style={styles.titleRow}>
-                <LinearGradient
-                  colors={locationData.isInSafeZone ? ['#059669', '#047857'] : ['#dc2626', '#ef4444']}
-                  style={[styles.locationIndicator, {
-                    shadowColor: locationData.isInSafeZone ? '#059669' : '#dc2626',
-                  }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Ionicons 
-                    name={locationData.isInSafeZone ? "shield-checkmark-outline" : "alert-circle-outline"} 
-                    size={20} 
-                    color="#ffffff" 
-                  />
-                </LinearGradient>
-                <View style={styles.titleTextContainer}>
-                  <Text style={styles.title}>Location & Safety</Text>
-                  <Text style={styles.subtitle}>Real-time tracking and monitoring</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          
-          <View style={styles.headerRight}>
-            <View style={styles.statusContainer}>
-              <View style={[styles.statusIndicator, { 
-                backgroundColor: locationData.isInSafeZone ? '#10b981' : '#ef4444' 
-              }]} />
-              <View style={styles.statusTextContainer}>
-                <Text style={styles.statusLabel}>Zone Status</Text>
-                <Text style={[styles.statusValue, { 
-                  color: locationData.isInSafeZone ? '#10b981' : '#ef4444' 
-                }]}>
-                  {locationData.isInSafeZone ? 'SAFE' : 'ALERT'}
-                </Text>
+      >        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <View style={styles.titleRow}>
+              <LinearGradient
+                colors={locationData.isInSafeZone ? ['#059669', '#047857'] : ['#dc2626', '#ef4444']}
+                style={[styles.locationIndicator, {
+                  shadowColor: locationData.isInSafeZone ? '#059669' : '#dc2626',
+                }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons 
+                  name={locationData.isInSafeZone ? "shield-checkmark-outline" : "alert-circle-outline"} 
+                  size={20} 
+                  color="#ffffff" 
+                />
+              </LinearGradient>
+              <View style={styles.titleTextContainer}>
+                <Text style={styles.title}>Location & Safety</Text>
+                <Text style={styles.subtitle}>Real-time tracking and monitoring</Text>
               </View>
             </View>
           </View>
@@ -331,18 +312,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-  },
-  headerContent: {
+  },  headerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  headerLeft: {
-    flex: 1,
-  },
   titleContainer: {
-    flex: 1,
+    alignItems: 'center',
   },
   titleRow: {
     flexDirection: 'row',
@@ -359,9 +336,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
-  },
-  titleTextContainer: {
-    flex: 1,
+  },  titleTextContainer: {
+    alignItems: 'center',
+    marginLeft: 14,
   },
   title: {
     fontSize: 26,
@@ -375,38 +352,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontWeight: '500',
     letterSpacing: 0.1,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
-  },  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-  },
-  statusIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-    // Better alignment
-    alignSelf: 'center',
-  },
-  statusTextContainer: {
-    alignItems: 'flex-end',
-  },
-  statusLabel: {
-    fontSize: 11,
-    color: '#9ca3af',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   content: {
     flex: 1,

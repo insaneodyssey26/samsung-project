@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useState, useEffect, useRef } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View, Animated, TouchableOpacity, ColorValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, ColorValue, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // Enhanced Line Chart with Gradients
