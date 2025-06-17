@@ -26,6 +26,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app needs access to location to show your current position and provide safety monitoring.",
+          "locationAlwaysPermission": "This app needs access to location to show your current position and provide safety monitoring.",
+          "locationWhenInUsePermission": "This app needs access to location to show your current position and provide safety monitoring."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

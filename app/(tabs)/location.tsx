@@ -1,20 +1,128 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import * as Location from 'expo-location';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function LocationScreen() {
-  const { colors } = useTheme();  const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [address, setAddress] = useState<string>('Loading...');
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-  const getCurrentLocationData = () => ({
-    address: "123 Main Street, Cityville",
-    coordinates: "40.7128° N, 74.0060° W",
-    lastUpdate: "2 mins ago",
-    accuracy: "±3 meters",
-    isInSafeZone: true,
-    currentZone: "Home"
-  });
+  // Request location permissions and get current location
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      setLocationError(null);
+
+      // Request permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError('Location permission denied');
+        setIsLoadingLocation(false);
+        return;
+      }
+
+      // Get current position
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      
+      setLocation(currentLocation);
+
+      // Get address from coordinates
+      try {
+        const addressResponse = await Location.reverseGeocodeAsync({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        });        if (addressResponse.length > 0) {
+          const addr = addressResponse[0];
+          
+          // Build address parts array, only including non-empty values
+          const addressParts = [];
+          
+          // Street address (street number + street name)
+          const streetParts = [];
+          if (addr.streetNumber) streetParts.push(addr.streetNumber);
+          if (addr.street) streetParts.push(addr.street);
+          if (streetParts.length > 0) {
+            addressParts.push(streetParts.join(' '));
+          }
+          
+          // Add other components if they exist
+          if (addr.subregion) addressParts.push(addr.subregion);
+          if (addr.city) addressParts.push(addr.city);
+          if (addr.region) addressParts.push(addr.region);
+          if (addr.country) addressParts.push(addr.country);
+          
+          const formattedAddress = addressParts.join(', ');
+          setAddress(formattedAddress || 'Address not available');
+        } else {
+          setAddress('Address not found');
+        }
+      } catch (addressError) {
+        console.log('Address error:', addressError);
+        setAddress('Address lookup failed');
+      }
+
+      setIsLoadingLocation(false);
+    } catch (error) {
+      console.log('Location error:', error);
+      setLocationError('Failed to get location');
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const getCurrentLocationData = () => {
+    if (locationError) {
+      return {
+        address: "Location unavailable",
+        coordinates: "Unable to determine",
+        lastUpdate: "Error",
+        accuracy: "±Unknown",
+        isInSafeZone: false,
+        currentZone: "Unknown"
+      };
+    }
+
+    if (isLoadingLocation || !location) {
+      return {
+        address: "Getting location...",
+        coordinates: "Loading coordinates...",
+        lastUpdate: "Updating...",
+        accuracy: "±Calculating",
+        isInSafeZone: true,
+        currentZone: "Loading"
+      };
+    }
+
+    const now = new Date();
+    const locationTime = new Date(location.timestamp);
+    const timeDiff = Math.floor((now.getTime() - locationTime.getTime()) / 1000);
+    
+    let timeAgo = "Just now";
+    if (timeDiff > 60) {
+      const minutes = Math.floor(timeDiff / 60);
+      timeAgo = `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+    }
+
+    return {
+      address: address,
+      coordinates: `${location.coords.latitude.toFixed(6)}°, ${location.coords.longitude.toFixed(6)}°`,
+      lastUpdate: timeAgo,
+      accuracy: location.coords.accuracy ? `±${Math.round(location.coords.accuracy)}m` : "±Unknown",
+      isInSafeZone: true, // This would be calculated based on home location set in settings
+      currentZone: "Current Location" // This would be determined by safe zones
+    };
+  };
 
   const getMedicalNearbyData = () => ([
     { id: 1, type: "Hospital", name: "City General Hospital", distance: "0.8 km", time: "3 mins", phone: "+1-555-0123" },
@@ -37,10 +145,10 @@ export default function LocationScreen() {
     { id: 2, name: "Hospital", status: "away", radius: "100m", alerts: true },
     { id: 3, name: "Pharmacy", status: "away", radius: "30m", alerts: false },
     { id: 4, name: "Family House", status: "away", radius: "75m", alerts: true }
-  ]);
-  const onRefresh = async () => {
+  ]);  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await getCurrentLocation();
+    setRefreshing(false);
   };
 
   const locationData = getCurrentLocationData();
@@ -93,15 +201,35 @@ export default function LocationScreen() {
             style={styles.cardGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-          />
-          <View style={styles.cardHeader}>
-            <Ionicons name="location" size={24} color="#10b981" />
+          />          <View style={styles.cardHeader}>
+            <Ionicons 
+              name={locationError ? "location-outline" : isLoadingLocation ? "refresh-outline" : "location"} 
+              size={24} 
+              color={locationError ? "#ef4444" : isLoadingLocation ? "#f59e0b" : "#10b981"} 
+            />
             <Text style={[styles.cardTitle, { color: colors.text }]}>Current Location</Text>
-            <View style={styles.accuracyBadge}>
-              <Text style={styles.accuracyText}>{locationData.accuracy}</Text>
+            <View style={[styles.accuracyBadge, {
+              backgroundColor: locationError ? '#fee2e2' : isLoadingLocation ? '#fef3c7' : '#e7f3ff'
+            }]}>
+              <Text style={[styles.accuracyText, {
+                color: locationError ? '#dc2626' : isLoadingLocation ? '#d97706' : '#2563eb'
+              }]}>
+                {locationData.accuracy}
+              </Text>
             </View>
-          </View>
-          <View style={styles.cardContent}>
+          </View>          <View style={styles.cardContent}>
+            {locationError && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="warning-outline" size={20} color="#ef4444" />
+                <Text style={styles.errorText}>{locationError}</Text>
+                <TouchableOpacity 
+                  style={styles.retryButton} 
+                  onPress={getCurrentLocation}
+                >
+                  <Text style={styles.retryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <Text style={[styles.locationAddress, { color: colors.text }]}>
               {locationData.address}
             </Text>
@@ -604,11 +732,38 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     marginLeft: 8,
     letterSpacing: -0.2,
-  },
-  emergencyNote: {
+  },  emergencyNote: {
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     fontWeight: '500',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#dc2626',
+    fontWeight: '500',
+    marginLeft: 8,
+    flex: 1,
+  },
+  retryButton: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  retryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
