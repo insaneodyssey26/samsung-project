@@ -22,30 +22,22 @@ export default function AlertsScreen() {
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-    // Animation values
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);  const [modalVisible, setModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;  const contentOpacity = useRef(new Animated.Value(0)).current;
   
-  // Mock health data (in real app, this would come from a context or API)
   const getCurrentHealthData = () => ({
     heartRate: 105, // High heart rate to trigger alert
     spO2: 94, // Low SpO2 to trigger alert
     temperature: 36.5,
     deviceStatus: 'Connected',
     batteryLevel: 15, // Low battery for demo
-    lastUpdate: '2 mins ago',
-  });
+    lastUpdate: '2 mins ago',  });
 
-  // Function to check for active alerts based on health data
   const checkForAlerts = () => {
-    const healthData = getCurrentHealthData();
-    const newAlerts: Alert[] = [];
+    const healthData = getCurrentHealthData();    const newAlerts: Alert[] = [];
 
-    // Heart Rate Alerts
     if (healthData.heartRate > 100) {
       newAlerts.push({
         id: 'hr-high',
@@ -69,10 +61,8 @@ export default function AlertsScreen() {
         value: `${healthData.heartRate} BPM`,
         threshold: 'Normal: 60-100 BPM',
         action: 'Monitor closely and consult healthcare provider'
-      });
-    }
+      });    }
 
-    // SpO2 Alerts
     if (healthData.spO2 < 95) {
       newAlerts.push({
         id: 'spo2-low',
@@ -84,10 +74,8 @@ export default function AlertsScreen() {
         value: `${healthData.spO2}%`,
         threshold: 'Normal: 95-100%',
         action: 'Seek immediate medical attention'
-      });
-    }
+      });    }
 
-    // Temperature Alerts
     if (healthData.temperature > 37.2) {
       newAlerts.push({
         id: 'temp-high',
@@ -111,10 +99,8 @@ export default function AlertsScreen() {
         value: `${healthData.temperature}°C`,
         threshold: 'Normal: 36.1-37.2°C',
         action: 'Keep warm and monitor temperature'
-      });
-    }
+      });    }
 
-    // Device Alerts
     if (healthData.batteryLevel < 20) {
       newAlerts.push({
         id: 'battery-low',
@@ -145,11 +131,9 @@ export default function AlertsScreen() {
 
     setAlerts(newAlerts);
   };
-
   useEffect(() => {
     checkForAlerts();
-    // In real app, this would be updated when health data changes
-    const interval = setInterval(checkForAlerts, 30000); // Check every 30 seconds
+    const interval = setInterval(checkForAlerts, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -185,7 +169,6 @@ export default function AlertsScreen() {
   };  const openAlertDetails = (alert: Alert) => {
     setSelectedAlert(alert);
     
-    // Reset animations to initial state before showing modal
     slideAnim.setValue(SCREEN_HEIGHT);
     fadeAnim.setValue(0);
     scaleAnim.setValue(0.9);
@@ -193,18 +176,14 @@ export default function AlertsScreen() {
     
     setModalVisible(true);
     
-    // Start all animations together with proper timing for smoothness
     Animated.sequence([
-      // Start backdrop fade immediately
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 250,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
         useNativeDriver: true,
-      }),
-    ]).start();
+      }),    ]).start();
     
-    // Modal slide and scale with slight delay for better visual flow
     setTimeout(() => {
       Animated.parallel([
         Animated.spring(slideAnim, {
@@ -219,10 +198,8 @@ export default function AlertsScreen() {
           friction: 7,
           useNativeDriver: true,
         }),
-      ]).start();
-    }, 50);
+      ]).start();    }, 50);
     
-    // Content fade in after modal movement starts
     setTimeout(() => {
       Animated.timing(contentOpacity, {
         toValue: 1,
@@ -231,17 +208,13 @@ export default function AlertsScreen() {
         useNativeDriver: true,
       }).start();
     }, 150);
-  };
-  const closeAlertDetails = () => {
-    // Start content fade out immediately
+  };  const closeAlertDetails = () => {
     Animated.timing(contentOpacity, {
       toValue: 0,
       duration: 200,
       easing: Easing.in(Easing.quad),
-      useNativeDriver: true,
-    }).start();
+      useNativeDriver: true,    }).start();
 
-    // Smooth exit animation with proper sequencing
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(slideAnim, {
@@ -352,9 +325,7 @@ export default function AlertsScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-      >
-        {alerts.length === 0 ? (
-          // Empty State
+      >        {alerts.length === 0 ? (
           <View style={styles.emptyState}>
             <LinearGradient
               colors={['#f0fdf4', '#dcfce7']}
@@ -376,8 +347,7 @@ export default function AlertsScreen() {
               </View>
             </LinearGradient>
           </View>        ) : (
-          // Active Alerts - Compact Tiles
-          <View style={styles.alertsGrid}>            {alerts.map((alert) => (
+          <View style={styles.alertsGrid}>{alerts.map((alert) => (
               <TouchableOpacity 
                 key={alert.id} 
                 style={styles.alertTile}
@@ -614,7 +584,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Modern Professional Header
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -747,10 +716,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1d5db',
     marginHorizontal: 16,
   },
-  content: {
-    padding: 12,
+  content: {    padding: 12,
   },
-  // Empty State Styles
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -799,10 +766,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9ca3af',
     textAlign: 'center',
-    fontWeight: '500',
-  },
+    fontWeight: '500',  },
 
-  // Compact Alert Tiles
   alertsGrid: {
     flex: 1,
   },
@@ -909,10 +874,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 16,
-    padding: 4,
-  },
+    padding: 4,  },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     position: 'relative',

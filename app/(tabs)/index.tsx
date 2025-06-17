@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, ColorValue, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
-// Enhanced Line Chart with Gradients
 interface ClassicLineChartProps {
   data: number[];
   color: string;

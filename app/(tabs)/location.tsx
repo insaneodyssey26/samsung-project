@@ -5,10 +5,8 @@ import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function LocationScreen() {
-  const { colors } = useTheme();
-  const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useTheme();  const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data for health-related location features
   const getCurrentLocationData = () => ({
     address: "123 Main Street, Cityville",
     coordinates: "40.7128° N, 74.0060° W",
@@ -40,10 +38,8 @@ export default function LocationScreen() {
     { id: 3, name: "Pharmacy", status: "away", radius: "30m", alerts: false },
     { id: 4, name: "Family House", status: "away", radius: "75m", alerts: true }
   ]);
-
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate data refresh
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -302,7 +298,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Professional Header Styles
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -393,10 +388,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   cardContent: {
-    padding: 20,
-    paddingTop: 16,
+    padding: 20,    paddingTop: 16,
   },
-  // Current Location Styles
   accuracyBadge: {
     backgroundColor: '#e7f3ff',
     paddingHorizontal: 10,
@@ -432,10 +425,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    fontWeight: '500',
-    marginLeft: 6,
+    fontWeight: '500',    marginLeft: 6,
   },
-  // Activity Styles
   riskBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -480,10 +471,8 @@ const styles = StyleSheet.create({
   postureText: {
     fontSize: 13,
     fontWeight: '500',
-    marginLeft: 8,
-    flex: 1,
+    marginLeft: 8,    flex: 1,
   },
-  // Medical Nearby Styles
   viewAllButton: {
     backgroundColor: '#f3f4f6',
     paddingHorizontal: 12,
@@ -540,10 +529,8 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: '#dcfce7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center',    justifyContent: 'center',
   },
-  // Safe Zones Styles
   manageButton: {
     backgroundColor: '#f3f4f6',
     paddingHorizontal: 12,
@@ -597,10 +584,8 @@ const styles = StyleSheet.create({
   },
   alertToggleText: {
     fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontWeight: '700',    letterSpacing: 0.5,
   },
-  // Emergency Styles
   emergencyButton: {
     borderRadius: 16,
     overflow: 'hidden',
