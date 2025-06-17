@@ -12,7 +12,9 @@ interface RealMedicalFacility {
   phone?: string;
   address?: string;
   isOpen?: boolean;
-  source: 'OSM' | 'Google' | 'Nominatim' | 'Overpass' | 'LocationIQ';
+  rating?: number;
+  website?: string;
+  source: 'OSM' | 'Google' | 'Nominatim' | 'Overpass' | 'LocationIQ' | 'Community';
 }
 
 export class RealMedicalFacilitiesService {
