@@ -1,9 +1,5 @@
-import { View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <View style={{ flex: 1 }}>
-      
-    </View>
-  );
+export default function Index() {
+  return <Redirect href="/(tabs)" />;
 }
