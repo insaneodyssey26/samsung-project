@@ -142,3 +142,4 @@ export class RealMedicalFacilitiesService {
 }
 
 export type { RealMedicalFacility };
+

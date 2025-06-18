@@ -1,9 +1,5 @@
 const LOCATIONIQ_API_KEY = 'pk.c374d72a740f6880fcfad8cdf4508854';
 
-// Google Places API key - you'll need to get this from Google Cloud Console
-// https://developers.google.com/maps/documentation/places/web-service/get-api-key
-const GOOGLE_PLACES_API_KEY: string = 'YOUR_GOOGLE_PLACES_API_KEY'; // Replace with your actual API key
-
 interface RealMedicalFacility {
   id: string;
   name: string;
@@ -68,11 +64,6 @@ export class LocationIQMedicalService {
     longitude: number, 
     radiusKm: number = 5
   ): Promise<RealMedicalFacility[]> {
-    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY === 'YOUR_GOOGLE_PLACES_API_KEY') {
-      console.log('⚠️ Google Places API key not configured');
-      return [];
-    }
-
     const allFacilities: RealMedicalFacility[] = [];
     const radius = Math.min(radiusKm * 1000, 50000); // Convert to meters, max 50km
     

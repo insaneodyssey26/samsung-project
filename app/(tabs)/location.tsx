@@ -204,16 +204,18 @@ export default function LocationScreen() {
         id: `clinic_${i}`,
         name: clinics[i],
         type: isDoctor ? 'Doctor' : 'Clinic',
-        distance: `${distance.toFixed(1)} km`,        time: `${Math.round(distance * 2.5)} mins`,
+        distance: `${distance.toFixed(1)} km`,
+        time: `${Math.round(distance * 2.5)} mins`,
         phone: `+1-555-${String(Math.floor(Math.random() * 9000) + 1000)}`,
         address: generateAddress(latitude, longitude, distance),
         isOpen: Math.random() > 0.3,
         latitude: latitude + (Math.random() - 0.5) * 0.015,
         longitude: longitude + (Math.random() - 0.5) * 0.015,
-        source: 'Community'
-      });    }
+        source: 'Community'      });
+    }
     
-    return facilities.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));  };
+    return facilities.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+  };
 
   const generateAddress = (lat: number, lng: number, distance: number): string => {
     const streetNumbers = [Math.floor(Math.random() * 9999) + 1];
@@ -224,7 +226,8 @@ export default function LocationScreen() {
     const streetName = streetNames[Math.floor(Math.random() * streetNames.length)];
     return `${streetNumbers[0]} ${streetName}`;  };
 
-  const enhanceFacilityData = (facilities: RealMedicalFacility[]): RealMedicalFacility[] => {    return facilities.map(facility => {
+  const enhanceFacilityData = (facilities: RealMedicalFacility[]): RealMedicalFacility[] => {
+    return facilities.map(facility => {
       const phone = facility.phone || `+1-555-${String(Math.floor(Math.random() * 9000) + 1000)}`;
       
       let cleanName = facility.name;
@@ -245,8 +248,8 @@ export default function LocationScreen() {
       return {
         ...facility,
         name: cleanName,
-        phone: phone
-      };    });
+        phone: phone      };
+    });
   };
 
   const getFallbackMedicalData = (): RealMedicalFacility[] => [
@@ -285,7 +288,8 @@ export default function LocationScreen() {
       latitude: 0,
       longitude: 0,
       source: 'Community'
-    }  ];
+    }
+  ];
 
   const handleWebsite = async (facility: RealMedicalFacility) => {
     if (facility.website) {
@@ -294,10 +298,10 @@ export default function LocationScreen() {
         Linking.openURL(facility.website);
       } else {
         Alert.alert('Error', 'Unable to open website on this device');
-      }
-    } else {
+      }    } else {
       Alert.alert('No Website', 'Website not available for this facility');
-    }  };
+    }
+  };
 
   const handleCall = async (facility: RealMedicalFacility) => {
     if (facility.phone) {
@@ -307,20 +311,21 @@ export default function LocationScreen() {
         Linking.openURL(phoneUrl);
       } else {
         Alert.alert('Error', 'Unable to make phone calls on this device');
-      }
-    } else {
+      }    } else {
       Alert.alert('No Phone Number', 'Phone number not available for this facility');
-    }  };
+    }
+  };
 
   const handleDirections = async (facility: RealMedicalFacility) => {
-    if (!location) {
-      Alert.alert('Location Error', 'Unable to get your current location');
+    if (!location) {      Alert.alert('Location Error', 'Unable to get your current location');
       return;
-    }    const { latitude: userLat, longitude: userLng } = location.coords;
+    }
+    const { latitude: userLat, longitude: userLng } = location.coords;
     
     let directionsUrl;
     
-    if (facility.latitude && facility.longitude) {      directionsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${facility.latitude},${facility.longitude}`;
+    if (facility.latitude && facility.longitude) {
+      directionsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${facility.latitude},${facility.longitude}`;
     } else {
       const query = encodeURIComponent(`${facility.name} ${facility.address || ''}`);
       directionsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${query}`;
@@ -340,8 +345,8 @@ export default function LocationScreen() {
       setLocationError(null);
 
       // Request permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {        setLocationError('Location permission denied');
+      const { status } = await Location.requestForegroundPermissionsAsync();      if (status !== 'granted') {
+        setLocationError('Location permission denied');
         setIsLoadingLocation(false);
         return;
       }
@@ -350,13 +355,14 @@ export default function LocationScreen() {
         accuracy: Location.Accuracy.High,
       });
       
-      console.log('Current Location:', currentLocation.coords.latitude, currentLocation.coords.longitude);      setLocation(currentLocation);
+      console.log('Current Location:', currentLocation.coords.latitude, currentLocation.coords.longitude);
+      setLocation(currentLocation);
 
       console.log('Searching for medical facilities near location...');
       searchNearbyMedical(currentLocation);
 
-      try {
-        const addressResponse = await Location.reverseGeocodeAsync({          latitude: currentLocation.coords.latitude,
+      try {        const addressResponse = await Location.reverseGeocodeAsync({
+          latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
         });
         
@@ -367,8 +373,8 @@ export default function LocationScreen() {
           
           const streetParts = [];
           if (addr.streetNumber) streetParts.push(addr.streetNumber);
-          if (addr.street) streetParts.push(addr.street);
-          if (streetParts.length > 0) {            addressParts.push(streetParts.join(' '));
+          if (addr.street) streetParts.push(addr.street);          if (streetParts.length > 0) {
+            addressParts.push(streetParts.join(' '));
           }
           
           if (addr.subregion) addressParts.push(addr.subregion);
@@ -476,10 +482,12 @@ export default function LocationScreen() {
       default:
         return 'medical';
     }  };
-
   const getFacilityStatusColor = (facility: RealMedicalFacility) => {
     if (facility.isOpen === undefined) return '#6b7280';
-    return facility.isOpen ? '#10b981' : '#ef4444';  };return (
+    return facility.isOpen ? '#10b981' : '#ef4444';
+  };
+
+  return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={['#ffffff', '#fafafa']}
@@ -538,7 +546,8 @@ export default function LocationScreen() {
                 color: locationError ? '#dc2626' : isLoadingLocation ? '#d97706' : '#2563eb'
               }]}>
                 {locationData.accuracy}
-              </Text>            </View>
+              </Text>
+            </View>
           </View>
           <View style={styles.cardContent}>
             {locationError && (
@@ -568,11 +577,11 @@ export default function LocationScreen() {
               </View>
               <View style={styles.metaItem}>
                 <Ionicons name="shield-checkmark" size={16} color="#10b981" />
-                <Text style={[styles.metaText, { color: "#10b981" }]}>
-                  In {locationData.currentZone}
+                <Text style={[styles.metaText, { color: "#10b981" }]}>                  In {locationData.currentZone}
                 </Text>
               </View>
-            </View>          </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.locationCard}>
@@ -615,11 +624,11 @@ export default function LocationScreen() {
               </View>
             </View>
             <View style={styles.postureInfo}>
-              <Ionicons name="body" size={16} color="#f59e0b" />
-              <Text style={[styles.postureText, { color: colors.textMuted }]}>
+              <Ionicons name="body" size={16} color="#f59e0b" />              <Text style={[styles.postureText, { color: colors.textMuted }]}>
                 Current posture: {movementData.posture} • Last movement: {movementData.lastMovement}
               </Text>
-            </View>          </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.locationCard}>
@@ -677,9 +686,11 @@ export default function LocationScreen() {
                     <Ionicons name="refresh" size={18} color="#fff" />
                   </Animated.View>
                 </LinearGradient>
-              </Animated.View>            </TouchableOpacity>
+              </Animated.View>
+            </TouchableOpacity>
           </View>
           <View style={styles.cardContent}>
+            {isLoadingMedical ? (
               <View style={styles.loadingContainer}>
                 <Text style={[styles.loadingMessage, { color: colors.textMuted }]}>
                   Finding nearby medical facilities...
@@ -716,13 +727,6 @@ export default function LocationScreen() {
                       />
                       <View style={styles.medicalInfo}>                        <View style={styles.facilityNameRow}>
                           <Text style={[styles.medicalName, { color: colors.text }]}>{facility.name}</Text>
-                          {/* Show rating if available from Google Places */}
-                          {facility.rating && (
-                            <View style={styles.ratingContainer}>
-                              <Ionicons name="star" size={12} color="#f59e0b" />
-                              <Text style={styles.ratingText}>{facility.rating.toFixed(1)}</Text>
-                            </View>
-                          )}
                         </View>                        <View style={styles.facilityDetails}>
                           <Text style={[styles.medicalType, { color: colors.textMuted }]}>{facility.type}</Text>
                           {facility.isOpen !== undefined && (
@@ -746,8 +750,8 @@ export default function LocationScreen() {
                             <Text style={[styles.statusText, { color: '#10b981' }]}>
                               • Real phone number
                             </Text>
-                          )}
-                        </View>{facility.address && (
+                          )}                        </View>
+                        {facility.address && (
                           <Text style={[styles.addressText, { color: colors.textMuted }]} numberOfLines={1}>
                             {facility.address.split(',')[0]}
                           </Text>
@@ -793,13 +797,13 @@ export default function LocationScreen() {
                         accessibilityLabel="Call facility"
                       >
                         <Ionicons name="call" size={16} color="#10b981" />
-                      </TouchableOpacity>
-                    </View></TouchableOpacity>
-                  );
-                })}
+                      </TouchableOpacity>                    </View>
+                  </TouchableOpacity>
+                  );})}
               </View>
             )}
-          </View>        </View>
+          </View>
+        </View>
 
         <View style={styles.locationCard}>
           <LinearGradient
@@ -840,9 +844,9 @@ export default function LocationScreen() {
                     </Text>
                   </View>
                 </View>
-              </View>
-            ))}
-          </View>        </View>
+              </View>            ))}
+          </View>
+        </View>
 
         <View style={styles.locationCard}>
           <LinearGradient

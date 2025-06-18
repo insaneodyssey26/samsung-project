@@ -3,6 +3,7 @@
 ## 🚀 Quick Setup (5 minutes)
 
 ### 1. Get Your Free API Key
+
 1. Go to [https://locationiq.com/](https://locationiq.com/)
 2. Click "Sign Up" (free tier: 5,000 requests/day)
 3. Verify your email
@@ -10,13 +11,15 @@
 5. Copy your API key
 
 ### 2. Add API Key to Your App
+
 1. Open `services/placesApi.ts`
 2. Replace `YOUR_LOCATIONIQ_API_KEY` with your actual API key:
    ```typescript
-   const LOCATIONIQ_API_KEY = 'pk.abc123...'; // Your actual key
+   const LOCATIONIQ_API_KEY = "pk.abc123..."; // Your actual key
    ```
 
 ### 3. Test the Integration
+
 1. Run your app: `npm start`
 2. Allow location permissions
 3. Go to Location tab
@@ -33,10 +36,12 @@
 ## 🎯 Expected Results
 
 Instead of:
+
 - ❌ "Local Pharmacy"
 - ❌ "Urgent Care Center"
 
 You'll see:
+
 - ✅ "CVS Pharmacy #1234"
 - ✅ "St. Mary's Hospital"
 - ✅ "Downtown Medical Clinic"
@@ -61,6 +66,7 @@ You'll see:
 ## 🆘 Need Help?
 
 If you see generic names like "Local Pharmacy", it means:
+
 1. API key not configured correctly
 2. No real facilities found in your area (try different location)
 3. API reached daily limit (check LocationIQ dashboard)
