@@ -729,91 +729,74 @@ export default function LocationScreen() {
                   <Text style={styles.retryText}>Try Again</Text>
                 </TouchableOpacity>
               </View>            ) : (
-              <View>
+              <View style={{ marginTop: 8 }}>
                 {medicalFacilities.map((facility) => {
                   return (
-                  <TouchableOpacity key={facility.id} style={styles.medicalItem}>
-                    <View style={styles.medicalLeft}>
-                      <Ionicons 
-                        name={getFacilityIcon(facility.type)} 
-                        size={20} 
-                        color={getFacilityStatusColor(facility)}
-                      />
-                      <View style={styles.medicalInfo}>                        <View style={styles.facilityNameRow}>
-                          <Text style={[styles.medicalName, { color: colors.text }]}>{facility.name}</Text>
-                        </View>                        <View style={styles.facilityDetails}>
-                          <Text style={[styles.medicalType, { color: colors.textMuted }]}>{facility.type}</Text>
-                          {facility.isOpen !== undefined && (
-                            <Text style={[styles.statusText, { 
-                              color: facility.isOpen ? '#10b981' : '#ef4444' 
-                            }]}>
-                              • {facility.isOpen ? 'Open now' : 'Currently closed'}
-                            </Text>
-                          )}
-                          {facility.source && (
-                            <Text style={[styles.statusText, { 
-                              color: facility.source === 'Google' ? '#4285f4' : 
-                                     facility.source === 'LocationIQ' ? '#2563eb' : '#6b7280' 
-                            }]}>
-                              • {facility.source === 'Google' ? 'Google verified' : 
-                                 facility.source === 'LocationIQ' ? 'LocationIQ data' : 
-                                 'Community data'}
-                            </Text>
-                          )}
-                          {facility.phone && facility.source === 'Google' && (
-                            <Text style={[styles.statusText, { color: '#10b981' }]}>
-                              • Real phone number
-                            </Text>
-                          )}                        </View>
+                    <View key={facility.id} style={{ backgroundColor: colors.background, borderRadius: 12, marginBottom: 12, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
+                      <TouchableOpacity 
+                        style={{ padding: 16 }}
+                        onPress={() => handleDirections(facility)}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }} numberOfLines={1}>{facility.name}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                              <Ionicons name={getFacilityIcon(facility.type)} size={14} color={colors.textMuted} />
+                              <Text style={{ marginLeft: 4, color: colors.textMuted, textTransform: 'capitalize' }}>{facility.type}</Text>
+                              {facility.isOpen !== undefined && (
+                                <Text style={{ color: facility.isOpen ? '#10b981' : '#ef4444', marginLeft: 8 }}>
+                                  • {facility.isOpen ? 'Open' : 'Closed'}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                          <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.primary }}>{facility.distance}</Text>
+                            <Text style={{ color: colors.textMuted }}>~{facility.time}</Text>
+                          </View>
+                        </View>
                         {facility.address && (
-                          <Text style={[styles.addressText, { color: colors.textMuted }]} numberOfLines={1}>
+                          <Text style={{ color: colors.textMuted, marginTop: 8 }} numberOfLines={1}>
                             {facility.address}
                           </Text>
                         )}
-                      </View>
-                    </View>                    <View style={styles.medicalRight}>
-                      <Text style={[styles.medicalDistance, { color: colors.text }]}>
-                        {facility.distance}
-                      </Text>
-                      <Text style={[styles.medicalTime, { color: colors.textMuted }]}>
-                        ~{facility.time}
-                      </Text>
-                    </View>                    <View style={styles.actionButtons}>
-                      <TouchableOpacity 
-                        style={styles.directionsButton}
-                        onPress={() => handleDirections(facility)}
-                        accessibilityLabel="Get directions"
-                      >
-                        <Ionicons name="navigate" size={16} color="#2563eb" />
                       </TouchableOpacity>
-                      
-                      {/* Website button if available */}
-                      {facility.website && (
-                        <TouchableOpacity 
-                          style={styles.websiteButton}
-                          onPress={() => handleWebsite(facility)}
-                          accessibilityLabel="Visit website"
+                      <View style={{ flexDirection: 'row', borderTopWidth: 1, borderColor: colors.border }}>
+                        <TouchableOpacity
+                          style={{ flex: 1, padding: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRightWidth: 1, borderColor: colors.border }}
+                          onPress={() => handleDirections(facility)}
                         >
-                          <Ionicons name="globe-outline" size={16} color="#8b5cf6" />
+                          <Ionicons name="navigate-outline" size={20} color={colors.primary} />
+                          <Text style={{ marginLeft: 8, color: colors.primary, fontWeight: '500' }}>Directions</Text>
                         </TouchableOpacity>
-                      )}
-                      
-                      {/* Call button - always active, show popup if number is not real */}
-                      <TouchableOpacity 
-                        style={styles.callButton}
-                        onPress={() => {
-                          if (facility.phone && !/^\+1-555-\d{4}$/.test(facility.phone)) {
-                            handleCall(facility);
-                          } else {
-                            Alert.alert('Phone Number Not Available', 'A real phone number is not available for this facility.');
-                          }
-                        }}
-                        accessibilityLabel="Call facility"
-                      >
-                        <Ionicons name="call" size={16} color="#10b981" />
-                      </TouchableOpacity>                    </View>
-                  </TouchableOpacity>
-                  );})}
+                        
+                        {facility.website && (
+                          <TouchableOpacity
+                            style={{ flex: 1, padding: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderRightWidth: 1, borderColor: colors.border }}
+                            onPress={() => handleWebsite(facility)}
+                          >
+                            <Ionicons name="globe-outline" size={20} color={colors.primary} />
+                            <Text style={{ marginLeft: 8, color: colors.primary, fontWeight: '500' }}>Website</Text>
+                          </TouchableOpacity>
+                        )}
+                        
+                        <TouchableOpacity
+                          style={{ flex: 1, padding: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}
+                          onPress={() => {
+                            if (facility.phone && !/^\+1-555-\d{4}$/.test(facility.phone)) {
+                              handleCall(facility);
+                            } else {
+                              Alert.alert('Phone Number Not Available', 'A real phone number is not available for this facility.');
+                            }
+                          }}
+                        >
+                          <Ionicons name="call-outline" size={20} color={colors.primary} />
+                          <Text style={{ marginLeft: 8, color: colors.primary, fontWeight: '500' }}>Call</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             )}
           </View>
