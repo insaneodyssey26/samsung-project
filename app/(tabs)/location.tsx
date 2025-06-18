@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Share } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { LocationIQMedicalService } from '../../services/placesApi';
 import { RealMedicalFacilitiesService, type RealMedicalFacility } from '../../services/realMedicalFacilities';
@@ -313,6 +313,26 @@ export default function LocationScreen() {
         Alert.alert('Error', 'Unable to make phone calls on this device');
       }    } else {
       Alert.alert('No Phone Number', 'Phone number not available for this facility');
+    }
+  };
+
+  const handleShareLiveLocation = async () => {
+    if (!location) {
+      Alert.alert('Cannot Share Location', 'Your location is not available yet. Please wait for it to update.');
+      return;
+    }
+
+    const { latitude, longitude } = location.coords;
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    const message = `I'm sharing my live location with you: ${googleMapsUrl}`;
+
+    try {
+      await Share.share({
+        message: message,
+        title: 'Live Location',
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share location.');
     }
   };
 
@@ -811,7 +831,7 @@ export default function LocationScreen() {
             <Text style={[styles.cardTitle, { color: colors.text }]}>Emergency Location</Text>
           </View>
           <View style={styles.cardContent}>
-            <TouchableOpacity style={styles.emergencyButton}>
+            <TouchableOpacity style={styles.emergencyButton} onPress={handleShareLiveLocation}>
               <LinearGradient
                 colors={['#ef4444', '#dc2626']}
                 style={styles.emergencyGradient}
