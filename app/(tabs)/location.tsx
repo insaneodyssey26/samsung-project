@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState, useRef } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Linking, Animated } from 'react-native';
-import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
-import { RealMedicalFacilitiesService, type RealMedicalFacility } from '../../services/realMedicalFacilities';
 import { LocationIQMedicalService } from '../../services/placesApi';
+import { RealMedicalFacilitiesService, type RealMedicalFacility } from '../../services/realMedicalFacilities';
 
 export default function LocationScreen() {
   const { colors } = useTheme();
@@ -451,20 +451,12 @@ export default function LocationScreen() {
     fallRisk: "Low"
   });
 
-  const getSafeZoneData = () => ([
-    { id: 1, name: "Home", status: "current", radius: "50m", alerts: true },
-    { id: 2, name: "Hospital", status: "away", radius: "100m", alerts: true },
-    { id: 3, name: "Pharmacy", status: "away", radius: "30m", alerts: false },
-    { id: 4, name: "Family House", status: "away", radius: "75m", alerts: true }
-  ]);
-
   const onRefresh = async () => {
     setRefreshing(true);
     await getCurrentLocation();
     setRefreshing(false);
   };  const locationData = getCurrentLocationData();
   const movementData = getMovementData();
-  const safeZones = getSafeZoneData();
 
   const getFacilityIcon = (type: RealMedicalFacility['type']) => {
     switch (type) {
@@ -577,7 +569,8 @@ export default function LocationScreen() {
               </View>
               <View style={styles.metaItem}>
                 <Ionicons name="shield-checkmark" size={16} color="#10b981" />
-                <Text style={[styles.metaText, { color: "#10b981" }]}>                  In {locationData.currentZone}
+                <Text style={[styles.metaText, { color: "#10b981" }]}>
+                  In {locationData.currentZone}
                 </Text>
               </View>
             </View>
@@ -620,11 +613,12 @@ export default function LocationScreen() {
               </View>
               <View style={styles.activityItem}>
                 <Text style={[styles.activityValue, { color: colors.text }]}>{movementData.activeTime}</Text>
-                <Text style={[styles.activityLabel, { color: colors.textMuted }]}>Active</Text>
+                <Text style={[styles.activityLabel, { color: colors.textMuted }]}>Active Time</Text>
               </View>
             </View>
             <View style={styles.postureInfo}>
-              <Ionicons name="body" size={16} color="#f59e0b" />              <Text style={[styles.postureText, { color: colors.textMuted }]}>
+              <Ionicons name="body" size={16} color="#f59e0b" />
+              <Text style={[styles.postureText, { color: colors.textMuted }]}>
                 Current posture: {movementData.posture} • Last movement: {movementData.lastMovement}
               </Text>
             </View>
@@ -813,49 +807,6 @@ export default function LocationScreen() {
             end={{ x: 1, y: 1 }}
           />
           <View style={styles.cardHeader}>
-            <Ionicons name="shield-checkmark" size={24} color="#10b981" />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Safe Zones</Text>
-            <TouchableOpacity style={styles.manageButton}>
-              <Text style={styles.manageText}>Manage</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.cardContent}>
-            {safeZones.map((zone) => (
-              <View key={zone.id} style={styles.zoneItem}>
-                <View style={styles.zoneLeft}>
-                  <View style={[styles.zoneStatus, {
-                    backgroundColor: zone.status === 'current' ? '#10b981' : '#d1d5db'
-                  }]} />
-                  <View style={styles.zoneInfo}>
-                    <Text style={[styles.zoneName, { color: colors.text }]}>{zone.name}</Text>
-                    <Text style={[styles.zoneRadius, { color: colors.textMuted }]}>
-                      Radius: {zone.radius}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.zoneRight}>
-                  <View style={[styles.alertToggle, {
-                    backgroundColor: zone.alerts ? '#10b981' : '#d1d5db'
-                  }]}>
-                    <Text style={[styles.alertToggleText, {
-                      color: zone.alerts ? '#ffffff' : '#6b7280'
-                    }]}>
-                      {zone.alerts ? 'ON' : 'OFF'}
-                    </Text>
-                  </View>
-                </View>
-              </View>            ))}
-          </View>
-        </View>
-
-        <View style={styles.locationCard}>
-          <LinearGradient
-            colors={['#ffffff', '#fafafa']}
-            style={styles.cardGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={styles.cardHeader}>
             <Ionicons name="alert-circle" size={24} color="#ef4444" />
             <Text style={[styles.cardTitle, { color: colors.text }]}>Emergency Location</Text>
           </View>
@@ -972,8 +923,10 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
     letterSpacing: -0.2,
+    lineHeight: 24,
   },
-  cardContent: {    padding: 20,
+  cardContent: {
+    padding: 20,
     paddingTop: 16,
   },
   accuracyBadge: {
@@ -981,6 +934,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   accuracyText: {
     fontSize: 11,
@@ -988,30 +943,36 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    textAlign: 'center',
   },
   locationAddress: {
     fontSize: 17,
     fontWeight: '600',
     marginBottom: 8,
     lineHeight: 24,
+    textAlign: 'left',
   },
   coordinates: {
     fontSize: 14,
     fontFamily: 'monospace',
-    marginBottom: 16,
+    marginBottom: 12,
+    textAlign: 'left',
   },
   locationMeta: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 8,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    marginRight: 16,
   },
-  metaText: {    fontSize: 13,
-    fontWeight: '500',
+  metaText: {
+    fontSize: 13,
     marginLeft: 6,
+    fontWeight: '500',
   },
   riskBadge: {
     paddingHorizontal: 10,
@@ -1305,50 +1266,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#374151',
-  },
-  zoneItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  zoneLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  zoneStatus: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  zoneInfo: {
-    flex: 1,
-  },
-  zoneName: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  zoneRadius: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  zoneRight: {
-    alignItems: 'flex-end',
-  },
-  alertToggle: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  alertToggleText: {    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
   emergencyButton: {
     borderRadius: 16,
