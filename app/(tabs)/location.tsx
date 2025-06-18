@@ -767,7 +767,7 @@ export default function LocationScreen() {
                           )}                        </View>
                         {facility.address && (
                           <Text style={[styles.addressText, { color: colors.textMuted }]} numberOfLines={1}>
-                            {facility.address.split(',')[0]}
+                            {facility.address}
                           </Text>
                         )}
                       </View>
